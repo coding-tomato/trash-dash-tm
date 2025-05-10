@@ -380,6 +380,7 @@ class Game {
         const trashType = activeTrash.type;
         
         activeTrash.destroy();
+        this.player.jump();
         
         // Remove from array
         this.trashSpawner.trashItems.splice(this.trashSpawner.activeCollisionIndex, 1);

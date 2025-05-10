@@ -13,6 +13,13 @@ class Player {
     this.currentFrame = 0;
     this.animationSpeed = 10; // Increased animation speed
     this.animationCounter = 0;
+    
+    // Jump properties
+    this.isJumping = false;
+    this.jumpHeight = 0.6;
+    this.jumpDuration = 0.4; // seconds
+    this.jumpTimer = 0;
+    this.initialY = 1; // Store the initial Y position
 
     // Load the sprite texture
     const textureLoader = new THREE.TextureLoader();
@@ -90,6 +97,14 @@ class Player {
     uvs.needsUpdate = true;
   }
 
+  jump() {
+    if (!this.isJumping) {
+      this.isJumping = true;
+      this.jumpTimer = 0;
+      this.initialY = this.group.position.y; // Store the starting Y position
+    }
+  }
+
   update(deltaTime) {
     // Update animation
     this.animationCounter += deltaTime * this.animationSpeed;
@@ -99,6 +114,22 @@ class Player {
       this.currentFrame = (this.currentFrame + 1) % this.totalFrames;
       this.updateUVs(this.mesh.geometry);
       this.animationCounter = 0;
+    }
+
+    // Handle jump animation if jumping
+    if (this.isJumping) {
+      this.jumpTimer += deltaTime;
+      
+      if (this.jumpTimer >= this.jumpDuration) {
+        // Jump is complete, reset position and state
+        this.group.position.y = this.initialY;
+        this.isJumping = false;
+      } else {
+        // Calculate jump position using sine curve for smooth up and down
+        const jumpProgress = this.jumpTimer / this.jumpDuration;
+        const jumpOffset = Math.sin(jumpProgress * Math.PI) * this.jumpHeight;
+        this.group.position.y = this.initialY + jumpOffset;
+      }
     }
 
     // Update the box collider to match the player's position
