@@ -12,26 +12,28 @@ class AssetLoader {
     this.loadingPromise = null;
     this.modelPaths = {
       // Glass items
-      botellaVino: '/SM_BotellaVino.fbx',
-      botellin: '/SM_Botellin.fbx',
-      copaRota: '/SM_CopaRota.fbx',
-      botellaLicor: '/SM_BotellaLicor.fbx',
+      botellaVino: './SM_BotellaVino.fbx',
+      botellin: './SM_Botellin.fbx',
+      copaRota: './SM_CopaRota.fbx',
+      botellaLicor: './SM_BotellaLicor.fbx',
       
       // Plastic items
-      botellaPlastico: '/SM_BotellaPlastico.fbx',
-      bolsa: '/SM_Bolsa.fbx',
-      jeringuilla: '/SM_Jeringuilla.fbx',
+      botellaPlastico: './SM_BotellaPlastico.fbx',
+      bolsa: './SM_Bolsa.fbx',
+      jeringuilla: './SM_Jeringuilla.fbx',
       
       // Metal items
-      sodaCan: '/SM_SodaCan.fbx',
-      lataAtun: '/SM_LataAtun.fbx',
-      bateria: '/SM_Bateria.fbx',
-      movil: '/SM_Movil.fbx',
+      sodaCan: './SM_SodaCan.fbx',
+      lataAtun: './SM_LataAtun.fbx',
+      bateria: './SM_Bateria.fbx',
+      movil: './SM_Movil.fbx',
       
       // Organic items
-      bananaPeel: '/SM_BananaPeel.fbx',
-      manzana: '/SM_Manzana.fbx',
-      musloPollo: '/SM_MusloPollo.fbx'
+      bananaPeel: './SM_BananaPeel.fbx',
+      manzana: './SM_Manzana.fbx',
+      musloPollo: './SM_MusloPollo.fbx',
+      pizzaSlice: './SM_PizzaSlice.fbx',
+      eggShell: './SM_EggShell.fbx',
     };
   }
 

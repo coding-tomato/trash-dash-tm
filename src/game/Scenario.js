@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { CONFIG } from "../config.js";
 
 class Scenario {
   constructor(scene) {
@@ -43,9 +44,11 @@ class Scenario {
   }
 
   setupGridHelper() {
-    const gridHelper = new THREE.GridHelper(20, 24, 0xccccff, 0xffffff);
-    this.scene.add(gridHelper);
-    this.objects.push(gridHelper);
+    if (CONFIG.DEBUG) {
+      const gridHelper = new THREE.GridHelper(20, 24, 0xccccff, 0xffffff);
+      this.scene.add(gridHelper);
+      this.objects.push(gridHelper);
+    }
   }
 
   setupLighting() {
@@ -70,8 +73,8 @@ class Scenario {
     this.objects.push(this.spotLight);
     // Bulb
     const bulbGeometry = new THREE.SphereGeometry(0.2, 16, 16);
-    const bulbMaterial = new THREE.MeshBasicMaterial({ 
-      color: 0xffffcc, 
+    const bulbMaterial = new THREE.MeshBasicMaterial({
+      color: 0xffffcc,
     });
     const bulbMesh = new THREE.Mesh(bulbGeometry, bulbMaterial);
     bulbMesh.position.copy(this.spotLight.position);

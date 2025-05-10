@@ -48,7 +48,7 @@ class Trash {
       glass: ["botellaVino", "botellin", "copaRota", "botellaLicor"],
       plastic: ["botellaPlastico", "bolsa", "jeringuilla"],
       metal: ["sodaCan", "lataAtun", "bateria", "movil"],
-      organic: ["bananaPeel", "manzana", "musloPollo"]
+      organic: ["bananaPeel", "manzana", "musloPollo", "pizzaSlice", "eggShell"],
     };
 
     // Pick a random model from the appropriate category
@@ -201,6 +201,11 @@ class Trash {
       .clone()
       .multiplyScalar(this.speed * deltaTime);
     this.mesh.position.add(movement);
+
+    // Make the trash spin slightly all the time
+    if (this.mesh) {
+      this.mesh.rotation.y += 0.01;
+    }
 
     // If colliding, add visual effect but don't stop movement
     if (this.isCollidingWithPlayer) {

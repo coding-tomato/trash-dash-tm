@@ -16,7 +16,7 @@ class Player {
 
     // Load the sprite texture
     const textureLoader = new THREE.TextureLoader();
-    const spriteTexture = textureLoader.load("/characters2_idle.png");
+    const spriteTexture = textureLoader.load("./characters2_idle.png");
     spriteTexture.magFilter = THREE.NearestFilter;
     spriteTexture.minFilter = THREE.NearestFilter;
     spriteTexture.flipY = true;
@@ -48,21 +48,20 @@ class Player {
     const colliderSize = new THREE.Vector3(4, 5, 5); // Slightly larger than the player
     this.collider = new THREE.Box3();
 
-    if (CONFIG.DEBUG) {
-      const boxGeometry = new THREE.BoxGeometry(
-        colliderSize.x,
-        colliderSize.y,
-        colliderSize.z
-      );
-      const wireframeMaterial = new THREE.MeshBasicMaterial({
-        color: 0x00ff00,
-        wireframe: true,
-        transparent: true,
-        opacity: 0.5,
-      });
-      this.colliderMesh = new THREE.Mesh(boxGeometry, wireframeMaterial);
-      this.group.add(this.colliderMesh);
-    }
+    const boxGeometry = new THREE.BoxGeometry(
+      colliderSize.x,
+      colliderSize.y,
+      colliderSize.z
+    );
+    const wireframeMaterial = new THREE.MeshBasicMaterial({
+      color: 0x00ff00,
+      wireframe: true,
+      transparent: true,
+      opacity: 0.5,
+    });
+    this.colliderMesh = new THREE.Mesh(boxGeometry, wireframeMaterial);
+    this.colliderMesh.visible = CONFIG.DEBUG;
+    this.group.add(this.colliderMesh);
 
     scene.add(this.group);
   }
@@ -70,7 +69,6 @@ class Player {
   updateUVs(geometry) {
     // Get the texture dimensions based on the actual spritesheet
     const textureWidth = this.frameWidth * this.totalFrames;
-    const textureHeight = this.frameHeight;
 
     // Calculate the frame position in UV coordinates
     const frameU = (this.frameWidth * this.currentFrame) / textureWidth;

@@ -35,6 +35,11 @@ class Game {
     this.trashSpawner = null;
     this.collisionsEnabled = true;
     this.keyCombo = [];
+    
+    // Camera animation properties
+    this.cameraAnimating = false;
+    this.cameraAnimationStartTime = null;
+    this.cameraAnimationDuration = 2000; // 2 seconds for intro animation
   }
 
   init() {
@@ -55,7 +60,9 @@ class Game {
 
     // Camera 
     this.camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
-    this.camera.position.copy(this.cameraConfig.initialPosition);
+    // Start camera farther away for intro animation
+    const startPosition = this.cameraConfig.initialPosition.clone().multiplyScalar(1.8);
+    this.camera.position.copy(startPosition);
     this.camera.lookAt(this.cameraConfig.lookAt);
 
     // Render
@@ -67,11 +74,44 @@ class Game {
     // Start pre-loading assets
     this.preloadAssets().then(() => {
       this.setupGameObjects();
+      this.startIntroAnimation(); // Begin camera animation
       this.animate();
     });
 
     window.addEventListener("resize", this.handleResize.bind(this));
     this.isInitialized = true;
+  }
+
+  startIntroAnimation() {
+    this.cameraAnimating = true;
+    this.cameraAnimationStartTime = Date.now();
+  }
+
+  updateCameraAnimation() {
+    if (!this.cameraAnimating) return false;
+    
+    const elapsed = Date.now() - this.cameraAnimationStartTime;
+    const progress = Math.min(elapsed / this.cameraAnimationDuration, 1.0);
+    
+    // Use easing function for smoother animation
+    const easedProgress = 1 - Math.pow(1 - progress, 3); // Cubic ease-out
+    
+    // Start position (farther away)
+    const startPosition = this.cameraConfig.initialPosition.clone().multiplyScalar(1.8);
+    // End position (standard position)
+    const endPosition = this.cameraConfig.initialPosition.clone();
+    
+    // Calculate current position
+    const newPosition = startPosition.clone().lerp(endPosition, easedProgress);
+    this.camera.position.copy(newPosition);
+    
+    // If animation is complete, set flag to false
+    if (progress >= 1.0) {
+      this.cameraAnimating = false;
+      return false;
+    }
+    
+    return true;
   }
 
   preloadAssets() {
@@ -127,6 +167,9 @@ class Game {
     const now = Date.now();
     const delta = now - (this.lastUpdate || now);
     this.lastUpdate = now;
+
+    // Update camera animation if active
+    this.updateCameraAnimation();
 
     // Update orbit controls (for damping)
     if (this.controls) {

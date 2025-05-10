@@ -1,5 +1,5 @@
 export const CONFIG = {
-  DEBUG: true,
+  DEBUG: false,
   SCENES: {
     MAIN_MENU: "MAIN_MENU",
     GAME: "GAME",
