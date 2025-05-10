@@ -38,6 +38,7 @@ const MainMenu = () => {
 
     // Change the current scene to GAME
     gameEngine.setCurrentScene(CONFIG.SCENES.GAME);
+    gameEngine.startIntroAnimation();
 
     setLoading(false);
   };
@@ -79,6 +80,7 @@ const MainMenu = () => {
         src="title.png"
         style={{
           imageRendering: "pixelated",
+          width: "150px",
           transform: "scale(3)",
           marginBottom: "8rem",
           animation: "dropAndBounce 1s linear", // Add animation
@@ -171,7 +173,7 @@ const MainMenu = () => {
               background-position: 0 0;
             }
             100% {
-              background-position: 100px 100px; // Move one pattern width/height
+              background-position: 100px 100px;
             }
           }
         `}

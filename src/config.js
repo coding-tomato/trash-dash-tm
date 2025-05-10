@@ -8,12 +8,15 @@ export const CONFIG = {
   LEVELS_CONFIG: [
     {
       SCORE_TO_BEAT: 20,
+      SPEED: 0.5,
     },
     {
       SCORE_TO_BEAT: 50,
+      SPEED: 2,
     },
     {
       SCORE_TO_BEAT: 70,
+      SPEED: 4,
     },
   ],
 };

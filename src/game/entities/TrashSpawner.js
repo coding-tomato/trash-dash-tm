@@ -10,6 +10,7 @@ class TrashSpawner {
       "glass",
       "metal",
       "organic",
+      "nonRecyclable",
     ];
     this.lastSpawnTime = 0;
     this.spawnInterval = 1500; // Spawn new trash every 2 seconds

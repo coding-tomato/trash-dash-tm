@@ -1,5 +1,4 @@
 import * as THREE from "three";
-import { FBXLoader } from "three/examples/jsm/loaders/FBXLoader.js";
 import assetLoader from "../AssetLoader";
 
 class Trash {
@@ -7,9 +6,9 @@ class Trash {
     this.scene = scene;
     this.type = type; // 'glass', 'plastic', 'metal', or 'organic'
     this.position = position;
-    this.velocity = new THREE.Vector3(1, 0, 0); // Moving sideways
-    this.speed = 1; // Movement speed
-    this.lifespan = 20000; // 20 seconds in milliseconds
+    this.velocity = new THREE.Vector3(1, 0, 0);
+    this.speed = 1.5;
+    this.lifespan = 20000;
     this.createdAt = Date.now();
     this.mesh = null;
     this.collider = null;
@@ -46,9 +45,16 @@ class Trash {
     // Models categorized by type
     const models = {
       glass: ["botellaVino", "botellin", "copaRota", "botellaLicor"],
-      plastic: ["botellaPlastico", "bolsa", "jeringuilla"],
-      metal: ["sodaCan", "lataAtun", "bateria", "movil"],
-      organic: ["bananaPeel", "manzana", "musloPollo", "pizzaSlice", "eggShell"],
+      plastic: ["botellaPlastico", "bolsa"],
+      metal: ["sodaCan", "lataAtun", "movil"],
+      organic: [
+        "bananaPeel",
+        "manzana",
+        "musloPollo",
+        "pizzaSlice",
+        "eggShell",
+      ],
+      nonRecyclable: ["jeringuilla", "bateria"],
     };
 
     // Pick a random model from the appropriate category
@@ -56,14 +62,19 @@ class Trash {
       const randomIndex = Math.floor(Math.random() * models[type].length);
       return models[type][randomIndex];
     }
-    
+
     // Fallbacks if no models are found
-    switch(type) {
-      case "glass": return "botellaVino";
-      case "plastic": return "botellaPlastico";
-      case "metal": return "sodaCan";
-      case "organic": return "bananaPeel";
-      default: return "sodaCan";
+    switch (type) {
+      case "glass":
+        return "botellaVino";
+      case "plastic":
+        return "botellaPlastico";
+      case "metal":
+        return "sodaCan";
+      case "organic":
+        return "bananaPeel";
+      default:
+        return "sodaCan";
     }
   }
 
@@ -84,7 +95,7 @@ class Trash {
                   roughness: 0.1,
                   metalness: 0,
                   transmission: 0.5, // Glass transparency
-                  clearcoat: 1.0
+                  clearcoat: 1.0,
                 });
                 break;
               case "plastic":
@@ -93,21 +104,28 @@ class Trash {
                   transparent: true,
                   opacity: 0.9,
                   roughness: 0.5,
-                  metalness: 0.1
+                  metalness: 0.1,
                 });
                 break;
               case "metal":
                 child.material = new THREE.MeshStandardMaterial({
                   color: 0xffffff,
                   roughness: 0.2,
-                  metalness: 0.5
+                  metalness: 0.5,
                 });
                 break;
               case "organic":
                 child.material = new THREE.MeshStandardMaterial({
                   color: 0x99cc66,
                   roughness: 0.8,
-                  metalness: 0.0
+                  metalness: 0.0,
+                });
+                break;
+              case "nonRecyclable":
+                child.material = new THREE.MeshStandardMaterial({
+                  color: 0xff0000,
+                  roughness: 0.5,
+                  metalness: 0.1,
                 });
                 break;
             }
@@ -116,11 +134,11 @@ class Trash {
             child.material.flatShading = true;
           }
         });
-        
+
         fbx.position.copy(this.position);
         this.mesh = fbx;
         this.scene.add(fbx);
-        
+
         // Create the collider here for FBX models
         const size = new THREE.Vector3(2, 2, 2);
         this.collider = new THREE.Box3(
@@ -130,7 +148,7 @@ class Trash {
         return;
       }
     }
-    
+
     // Fallback if model loading fails: use basic geometry
     let geometry;
     let material;
@@ -144,7 +162,7 @@ class Trash {
           opacity: 0.8,
           roughness: 0.1,
           metalness: 0,
-          transmission: 0.5
+          transmission: 0.5,
         });
         break;
       case "plastic":
@@ -153,7 +171,7 @@ class Trash {
           color: 0xffcc99,
           transparent: true,
           opacity: 0.9,
-          roughness: 0.5
+          roughness: 0.5,
         });
         break;
       case "metal":
@@ -161,23 +179,30 @@ class Trash {
         material = new THREE.MeshStandardMaterial({
           color: 0x88ccff,
           roughness: 0.2,
-          metalness: 1.0
+          metalness: 1.0,
         });
         break;
       case "organic":
         geometry = new THREE.TorusGeometry(0.8, 0.4, 16, 32);
         material = new THREE.MeshStandardMaterial({
           color: 0x99cc66,
-          roughness: 0.8
+          roughness: 0.8,
+        });
+        break;
+      case "nonRecyclable":
+        geometry = new THREE.CylinderGeometry(1, 1, 2, 32);
+        material = new THREE.MeshStandardMaterial({
+          color: 0xff0000,
+          roughness: 0.5,
         });
         break;
       default:
         geometry = new THREE.SphereGeometry(1, 16, 16);
         material = new THREE.MeshStandardMaterial({
-          color: 0xffffff
+          color: 0xffffff,
         });
     }
-    
+
     this.mesh = new THREE.Mesh(geometry, material);
     this.mesh.position.copy(this.position);
     this.mesh.castShadow = true;
@@ -225,8 +250,12 @@ class Trash {
     }
 
     const size = new THREE.Vector3(2, 2, 2);
-    this.collider.min.copy(this.mesh.position.clone().sub(size.clone().multiplyScalar(0.5)));
-    this.collider.max.copy(this.mesh.position.clone().add(size.clone().multiplyScalar(0.5)));
+    this.collider.min.copy(
+      this.mesh.position.clone().sub(size.clone().multiplyScalar(0.5))
+    );
+    this.collider.max.copy(
+      this.mesh.position.clone().add(size.clone().multiplyScalar(0.5))
+    );
 
     // Check if trash should be destroyed (after lifespan)
     if (Date.now() - this.createdAt >= this.lifespan) {

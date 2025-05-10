@@ -20,12 +20,10 @@ class AssetLoader {
       // Plastic items
       botellaPlastico: './SM_BotellaPlastico.fbx',
       bolsa: './SM_Bolsa.fbx',
-      jeringuilla: './SM_Jeringuilla.fbx',
       
       // Metal items
       sodaCan: './SM_SodaCan.fbx',
       lataAtun: './SM_LataAtun.fbx',
-      bateria: './SM_Bateria.fbx',
       movil: './SM_Movil.fbx',
       
       // Organic items
@@ -34,6 +32,10 @@ class AssetLoader {
       musloPollo: './SM_MusloPollo.fbx',
       pizzaSlice: './SM_PizzaSlice.fbx',
       eggShell: './SM_EggShell.fbx',
+
+      // Non-recyclable items
+      jeringuilla: './SM_Jeringuilla.fbx',
+      bateria: './SM_Bateria.fbx',
     };
   }
 

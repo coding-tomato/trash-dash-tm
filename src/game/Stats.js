@@ -11,8 +11,13 @@ class Stats {
   }
 
   addScore(amount) {
-    this.score += amount;
-    this.totalScore += amount;
+    if (this.score + amount < 0) {
+      this.score = 0;
+    }
+    else {
+      this.score += amount;
+      this.totalScore += amount;
+    }
   }
 
   setCurrentScene(scene) {

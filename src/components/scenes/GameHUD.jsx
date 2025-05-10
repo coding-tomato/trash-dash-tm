@@ -133,6 +133,8 @@ const GameHUD = () => {
         return "🥫"; // Can emoji
       case "organic":
         return "🍌"; // Banana emoji
+      case "nonRecyclable":
+        return "❌"; // Cross mark emoji
       default:
         return "🗑️"; // Generic trash emoji
     }
