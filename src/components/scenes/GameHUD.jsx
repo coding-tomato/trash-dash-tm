@@ -140,6 +140,24 @@ const GameHUD = () => {
     }
   };
 
+  // Traducción de tipos de basura
+  const getTrashTypeLabel = (type) => {
+    switch (type) {
+      case "glass":
+        return "Vidrio";
+      case "plastic":
+        return "Plástico";
+      case "metal":
+        return "Metal";
+      case "organic":
+        return "Orgánico";
+      case "nonRecyclable":
+        return "No reciclable";
+      default:
+        return "Basura";
+    }
+  };
+
   return (
     <div
       className="game-hud"
@@ -157,8 +175,8 @@ const GameHUD = () => {
       }}
     >
       <div>
-        <div>Level: {gameStats.level}</div>
-        <div>Score: {gameStats.score}</div>
+        <div>Nivel: {gameStats.level}</div>
+        <div>Puntaje: {gameStats.score}</div>
       </div>
 
       {trashInstructions.type && (
@@ -174,16 +192,17 @@ const GameHUD = () => {
             backgroundColor: "rgba(0, 0, 0, 0.6)",
             borderRadius: "5px",
             textAlign: "center",
+            fontSize: "16px",
             border: `2px solid ${getTrashColor(trashInstructions.type)}`,
           }}
         >
           <div>
             <strong>
-              {getTrashIcon(trashInstructions.type)} {trashInstructions.type.charAt(0).toUpperCase() + trashInstructions.type.slice(1)} Detected
+              {getTrashIcon(trashInstructions.type)} {getTrashTypeLabel(trashInstructions.type)} detectado
             </strong>
           </div>
           <div>
-            Press keys to dispose:{" "}
+            Presiona las teclas para desechar:{" "}
             {formatKeyCombo(trashInstructions.requiredCombo)}
           </div>
         </div>

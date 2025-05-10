@@ -21,9 +21,16 @@ class Game {
     this.stats = new Stats();
     this.assetsLoaded = false;
     
+    // Add audio properties
+    this.audioListener = null;
+    this.sounds = {
+      good: null,
+      bad: null
+    };
+    
     this.cameraConfig = {
-      initialPosition: new THREE.Vector3(0, 3, 4),
-      lookAt: new THREE.Vector3(0, 2, 0),
+      initialPosition: new THREE.Vector3(0, 1, 2),
+      lookAt: new THREE.Vector3(0, 0.5, 0),
       minDistance: 2,
       maxDistance: 30
     };
@@ -64,6 +71,22 @@ class Game {
     this.renderer.shadowMap.enabled = true;
     container.appendChild(this.renderer.domElement);
 
+    // Add orbit controls if in debug mode
+    if (CONFIG.DEBUG) {
+      this.controls = new OrbitControls(this.camera, this.renderer.domElement);
+      this.controls.target.copy(this.cameraConfig.lookAt);
+      this.controls.enableDamping = true;
+      this.controls.dampingFactor = 0.05;
+      this.controls.minDistance = this.cameraConfig.minDistance;
+      this.controls.maxDistance = this.cameraConfig.maxDistance;
+      console.log("Debug mode: Orbit controls enabled");
+    }
+
+    // Initialize audio 
+    this.audioListener = new THREE.AudioListener();
+    this.camera.add(this.audioListener);
+    this.loadSounds();
+    
     // Start pre-loading assets
     this.preloadAssets().then(() => {
       this.setupGameObjects();
@@ -72,6 +95,36 @@ class Game {
 
     window.addEventListener("resize", this.handleResize.bind(this));
     this.isInitialized = true;
+  }
+
+  // Add method to load sounds
+  loadSounds() {
+    const audioLoader = new THREE.AudioLoader();
+    
+    // Load good recycling sound
+    this.sounds.good = new THREE.Audio(this.audioListener);
+    audioLoader.load('/OK.wav', (buffer) => {
+      this.sounds.good.setBuffer(buffer);
+      this.sounds.good.setVolume(0.5);
+    });
+    
+    // Load bad recycling sound
+    this.sounds.bad = new THREE.Audio(this.audioListener);
+    audioLoader.load('/BAD.wav', (buffer) => {
+      this.sounds.bad.setBuffer(buffer);
+      this.sounds.bad.setVolume(0.5);
+    });
+  }
+
+  // Play a sound effect
+  playSound(soundName) {
+    const sound = this.sounds[soundName];
+    if (sound && sound.buffer) {
+      if (sound.isPlaying) {
+        sound.stop();
+      }
+      sound.play();
+    }
   }
 
   preloadAssets() {
@@ -128,8 +181,8 @@ class Game {
     const delta = now - (this.lastUpdate || now);
     this.lastUpdate = now;
 
-    // Update orbit controls (for damping)
-    if (this.controls) {
+    // Update orbit controls (for damping) if they exist
+    if (this.controls && CONFIG.DEBUG) {
       this.controls.update();
     }
 
@@ -258,6 +311,13 @@ class Game {
   destroy() {
     if (!this.isInitialized) return;
 
+    // Stop and clean up audio
+    Object.values(this.sounds).forEach(sound => {
+      if (sound && sound.isPlaying) {
+        sound.stop();
+      }
+    });
+
     // Stop animation loop
     if (this.animationId) {
       cancelAnimationFrame(this.animationId);
@@ -358,21 +418,27 @@ class Game {
         switch(activeTrash.type) {
           case "glass":
             scoreToAdd = 10;
+            this.playSound('good');
             break;
           case "plastic": 
             scoreToAdd = 10;
+            this.playSound('good');
             break;
           case "metal":
             scoreToAdd = 15;
+            this.playSound('good');
             break;
           case "organic":
             scoreToAdd = 5;
+            this.playSound('good');
             break;
           case "nonRecyclable":
             scoreToAdd = -20;
+            this.playSound('bad');
             break;
           default:
             scoreToAdd = 5;
+            this.playSound('good');
             break;
         }
 

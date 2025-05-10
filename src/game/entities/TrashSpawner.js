@@ -13,7 +13,7 @@ class TrashSpawner {
       "nonRecyclable",
     ];
     this.lastSpawnTime = 0;
-    this.spawnInterval = 1500; // Spawn new trash every 2 seconds
+    this.spawnInterval = 3000; // Spawn new trash every 2 seconds
     this.spawnArea = spawnArea;
     this.activeCollisionIndex = null; // Track which trash item is currently active for disposal
   }
@@ -35,7 +35,7 @@ class TrashSpawner {
     const randomType =
       this.trashTypes[Math.floor(Math.random() * this.trashTypes.length)];
 
-    const position = new THREE.Vector3(-10, 1, 0);
+    const position = new THREE.Vector3(-5, 0.5, 0);
 
     const newTrash = new Trash(this.scene, randomType, position);
     this.trashItems.push(newTrash);

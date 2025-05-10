@@ -8,11 +8,12 @@ class Trash {
     this.type = type; // 'glass', 'plastic', 'metal', or 'organic'
     this.position = position;
     this.velocity = new THREE.Vector3(1, 0, 0);
-    this.speed = 1.5;
+    this.speed = 0.5;
     this.lifespan = 20000;
     this.createdAt = Date.now();
     this.mesh = null;
     this.collider = null;
+    this.colliderMesh = null; // Add property for collider visualization
     this.modelName = this.selectRandomModel(type);
 
     // Collision state
@@ -201,13 +202,25 @@ class Trash {
   }
 
   createCollider() {
-    if (this.collider) return;
     const size = new THREE.Vector3(2, 2, 2);
     const center = this.position.clone();
     this.collider = new THREE.Box3(
       center.clone().sub(size.clone().multiplyScalar(0.5)),
       center.clone().add(size.clone().multiplyScalar(0.5))
     );
+
+    // Create a wireframe visualization of the collider
+    const boxGeometry = new THREE.BoxGeometry(size.x, size.y, size.z);
+    const wireframeMaterial = new THREE.MeshBasicMaterial({
+      color: 0xff00ff, // Different color from player collider
+      wireframe: true,
+      transparent: true,
+      opacity: 0.5,
+    });
+    this.colliderMesh = new THREE.Mesh(boxGeometry, wireframeMaterial);
+    this.colliderMesh.position.copy(center);
+    this.colliderMesh.visible = CONFIG.DEBUG; // Only show in debug mode
+    this.scene.add(this.colliderMesh);
   }
 
   update(deltaTime) {
@@ -239,6 +252,7 @@ class Trash {
       }
     }
 
+    // Update collider position
     const size = new THREE.Vector3(2, 2, 2);
     this.collider.min.copy(
       this.mesh.position.clone().sub(size.clone().multiplyScalar(0.5))
@@ -246,6 +260,14 @@ class Trash {
     this.collider.max.copy(
       this.mesh.position.clone().add(size.clone().multiplyScalar(0.5))
     );
+    
+    // Update the wireframe collider visualization position
+    if (this.colliderMesh) {
+      // Calculate center of the collider box
+      const center = new THREE.Vector3();
+      this.collider.getCenter(center);
+      this.colliderMesh.position.copy(center);
+    }
 
     // Check if trash should be destroyed (after lifespan)
     if (Date.now() - this.createdAt >= this.lifespan) {
@@ -319,8 +341,22 @@ class Trash {
     if (this.mesh && this.scene) {
       this.scene.remove(this.mesh);
       if (this.mesh.geometry) this.mesh.geometry.dispose();
-      if (this.mesh.material) this.mesh.material.dispose();
+      if (this.mesh.material) {
+        if (Array.isArray(this.mesh.material)) {
+          this.mesh.material.forEach(material => material.dispose());
+        } else {
+          this.mesh.material.dispose();
+        }
+      }
       this.mesh = null;
+    }
+
+    // Also remove the collider mesh
+    if (this.colliderMesh && this.scene) {
+      this.scene.remove(this.colliderMesh);
+      if (this.colliderMesh.geometry) this.colliderMesh.geometry.dispose();
+      if (this.colliderMesh.material) this.colliderMesh.material.dispose();
+      this.colliderMesh = null;
     }
 
     this.collider = null;

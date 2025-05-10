@@ -14,10 +14,8 @@ const MainMenu = () => {
       setLoadingAssets(data.loading);
     };
 
-    // Add event listener for asset loading
     gameEngine.addEventListener("loadingAssets", handleLoadingAssets);
 
-    // Clean up listener
     return () => {
       gameEngine.removeEventListener("loadingAssets", handleLoadingAssets);
     };
@@ -59,7 +57,7 @@ const MainMenu = () => {
         color: "white",
         textAlign: "center",
         zIndex: 1000,
-        overflow: "hidden", // Hide overflow to prevent scrollbars
+        overflow: "hidden",
       }}
     >
       <div
@@ -70,8 +68,8 @@ const MainMenu = () => {
           width: "100%",
           backgroundImage: "url('bg-pattern.png')",
           backgroundRepeat: "repeat",
-          backgroundSize: "100px", // Increase the size of the pattern
-          animation: "scrollBackground 5s linear infinite", // Add scrolling animation
+          backgroundSize: "100px",
+          animation: "scrollBackground 5s linear infinite", 
         }}
       ></div>
 
@@ -82,7 +80,7 @@ const MainMenu = () => {
           width: "150px",
           transform: "scale(3)",
           marginBottom: "8rem",
-          animation: "dropAndBounce 1s linear", // Add animation
+          animation: "dropAndBounce 1s linear",
         }}
       />
 
@@ -126,10 +124,10 @@ const MainMenu = () => {
         }
       >
         {loadingAssets
-          ? "Loading Assets..."
+          ? "Cargando archivos..."
           : loading
-          ? "Loading..."
-          : "Start Game"}
+          ? "Cargando..."
+          : "¡Empezar!"}
       </button>
 
       {loadingAssets && (

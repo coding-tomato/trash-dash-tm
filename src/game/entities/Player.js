@@ -139,17 +139,12 @@ class Player {
   checkCollision(object) {
     // Check if the object has a collider or if we need to create a temporary one
     let objectCollider;
-
-    if (object.collider) {
-      objectCollider = object.collider;
-    } else if (object.mesh) {
-      objectCollider = new THREE.Box3().setFromObject(object.mesh);
-    } else {
-      return false;
+    objectCollider = object.collider;
+    const collision = this.collider.intersectsBox(objectCollider)
+    if (collision) {
+      console.log("Collision detected with object:", object);
     }
-
-    // Return true if colliders intersect
-    return this.collider.intersectsBox(objectCollider);
+    return collision;
   }
 
   destroy(scene) {

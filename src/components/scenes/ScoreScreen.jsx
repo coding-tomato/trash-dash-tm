@@ -60,7 +60,7 @@ const ScoreScreen = () => {
           textShadow: "0 0 5px rgba(0, 0, 0, 1)",
         }}
       >
-        Game Over
+        Juego terminado
       </h1>
 
       <div
@@ -83,7 +83,7 @@ const ScoreScreen = () => {
             justifyContent: "space-between",
           }}
         >
-          <span>Final Score:</span>
+          <span>Puntaje final:</span>
           <span>{score || "ERROR"}</span>
         </div>
       </div>

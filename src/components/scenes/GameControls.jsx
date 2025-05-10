@@ -82,7 +82,7 @@ const GameControls = () => {
             cursor: "pointer",
           }}
         >
-          Start Game
+          Iniciar Juego
         </button>
       ) : (
         <button
@@ -96,7 +96,7 @@ const GameControls = () => {
             cursor: "pointer",
           }}
         >
-          Pause
+          Pausar
         </button>
       )}
 
@@ -112,11 +112,11 @@ const GameControls = () => {
             cursor: "pointer",
           }}
         >
-          Reset Game
+          Reiniciar Juego
         </button>
       )}
 
-      {/* Instructions text */}
+      {/* Texto de instrucciones */}
       <div
         style={{
           position: "absolute",
@@ -131,7 +131,7 @@ const GameControls = () => {
           transform: "translateX(-50%)",
         }}
       >
-        <p>Use arrow keys ↑ ↓ ← → in combinations to categorise the trash</p>
+        <p>Usa las flechas ↑ ↓ ← → en combinaciones para categorizar la basura</p>
       </div>
     </div>
   );
