@@ -18,8 +18,9 @@ class Trash {
 
     // Collision state
     this.isCollidingWithPlayer = false;
-    this.collisionStartTime = null;
-    this.disposalTimeLimit = 3000; // 3 seconds to input the correct combination
+    this.maxCollisionDistance = 5; // Maximum distance to player to maintain collision
+    this.lastCollisionCheck = Date.now();  // Add a timestamp to track collisions
+    this.collisionTimeout = 20000; // 3 seconds maximum collision time as a safety mechanism
 
     // Define key combinations required for disposal based on trash type
     this.requiredCombination = this.getRequiredCombination();
@@ -240,14 +241,16 @@ class Trash {
       // Visual indicator that it's in "disposal mode" - slight up/down movement
       this.mesh.position.y += Math.sin(Date.now() * 0.01) * 0.01;
 
-      // Check if disposal time limit is exceeded
-      if (Date.now() - this.collisionStartTime > this.disposalTimeLimit) {
+      // Check if collision has timed out (safety mechanism)
+      if (Date.now() - this.lastCollisionCheck > this.collisionTimeout) {
+        console.log("Collision timeout reached for trash:", this.type);
         this.resetCollision();
       }
 
       // Check if trash has moved too far from player (opportunity window closed)
-      const playerPosition = new THREE.Vector3(0, 1, 0); // Assuming player is at this position
-      if (this.mesh.position.distanceTo(playerPosition) > 5) {
+      // We'll use the original fixed position as a reference point
+      const playerPosition = new THREE.Vector3(0, 1, -1); // Player's typical position
+      if (this.mesh.position.distanceTo(playerPosition) > this.maxCollisionDistance) {
         this.resetCollision();
       }
     }
@@ -281,29 +284,15 @@ class Trash {
   startCollision() {
     if (!this.isCollidingWithPlayer) {
       this.isCollidingWithPlayer = true;
-      this.collisionStartTime = Date.now();
       this.position = this.mesh.position.clone();
+      this.lastCollisionCheck = Date.now();
+      console.log("Starting collision with trash type:", this.type);
     }
   }
 
   resetCollision() {
     this.isCollidingWithPlayer = false;
-    this.collisionStartTime = null;
-
-    // Reset material appearance
-    if (this.type === "metal") {
-      // Handle FBX model - traverse all child meshes
-      this.mesh.traverse((child) => {
-        if (child.isMesh && child.material) {
-          child.material.emissive = new THREE.Color(0x000000);
-          child.material.emissiveIntensity = 0;
-        }
-      });
-    } else if (this.mesh.material) {
-      // Handle standard geometries
-      this.mesh.material.emissive = new THREE.Color(0x000000);
-      this.mesh.material.emissiveIntensity = 0;
-    }
+    console.log("Resetting collision for trash type:", this.type);
   }
 
   checkCombination(inputCombo) {

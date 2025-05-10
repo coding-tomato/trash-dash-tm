@@ -92,7 +92,6 @@ class AssetLoader {
     // Create a single promise that resolves when all models are loaded
     this.loadingPromise = Promise.all(promises).then(() => {
       this.isLoaded = true;
-      console.log('All 3D models loaded successfully');
       return true;
     }).catch(error => {
       console.error('Failed to load all models:', error);

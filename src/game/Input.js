@@ -2,7 +2,6 @@ class Input {
   constructor({ onFire, onPause, onKeyCombo = null, enabled = true } = {}) {
     this.enabled = enabled;
     this.keys = {
-      space: false,
       arrowUp: false,
       arrowDown: false,
       arrowLeft: false,
@@ -28,8 +27,13 @@ class Input {
         case "Escape":
           if (this.handlers.onPause) this.handlers.onPause();
           break;
+        case " ": // For older browsers
+          e.preventDefault();
+          this.keys.space = true;
+          this.resetCombo();
+          break;
         case "ArrowUp":
-          e.preventDefault(); // Prevent default scrolling
+          e.preventDefault(); 
           this.keys.arrowUp = true;
           this._addToCombo("up", now);
           break;
@@ -55,20 +59,20 @@ class Input {
     
     this.handleKeyUp = (e) => {
       switch (e.key) {
-        case " ":
-          e.preventDefault(); // Prevent default scrolling for space
+        case " ": // For older browsers
+          e.preventDefault();
           this.keys.space = false;
           break;
         case "ArrowUp":
-          e.preventDefault(); // Prevent default scrolling
+          e.preventDefault(); 
           this.keys.arrowUp = false;
           break;
         case "ArrowDown":
-          e.preventDefault(); // Prevent default scrolling
+          e.preventDefault(); 
           this.keys.arrowDown = false;
           break;
         case "ArrowLeft":
-          e.preventDefault(); // Prevent default scrolling
+          e.preventDefault(); 
           this.keys.arrowLeft = false;
           break;
         case "ArrowRight":
@@ -104,6 +108,7 @@ class Input {
 
   resetCombo() {
     this.recentKeys = [];
+    this.handlers.onKeyCombo([]);
   }
 
   attach() {

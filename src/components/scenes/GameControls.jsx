@@ -64,7 +64,7 @@ const GameControls = () => {
       style={{
         position: "absolute",
         bottom: "20px",
-        left: "50%",
+        right: "0.5rem",
         transform: "translateX(-50%)",
         display: "flex",
         gap: "10px",
@@ -115,24 +115,6 @@ const GameControls = () => {
           Reiniciar Juego
         </button>
       )}
-
-      {/* Texto de instrucciones */}
-      <div
-        style={{
-          position: "absolute",
-          bottom: "60px",
-          textAlign: "center",
-          color: "white",
-          backgroundColor: "rgba(0,0,0,0.5)",
-          padding: "10px",
-          borderRadius: "4px",
-          width: "300px",
-          left: "50%",
-          transform: "translateX(-50%)",
-        }}
-      >
-        <p>Usa las flechas ↑ ↓ ← → en combinaciones para categorizar la basura</p>
-      </div>
     </div>
   );
 };

@@ -16,6 +16,8 @@ const GameHUD = () => {
     type: null,
     requiredCombo: [],
   });
+  // New state to track current key combination
+  const [currentKeyCombo, setCurrentKeyCombo] = useState([]);
 
   useEffect(() => {
     if (!gameEngine) return;
@@ -37,18 +39,27 @@ const GameHUD = () => {
       }));
     };
 
+    // New event listener for key combinations
+    const handleKeyCombo = (combo) => {
+      setCurrentKeyCombo(combo);
+    };
+
     // Event listener for collisions with trash
     const handleCollision = (data) => {
+      // Add a hint for non-recyclable items
+      const isNonRecyclable = data.type === "nonRecyclable";
+      
       setTrashInstructions({
         visible: true,
         type: data.type,
         requiredCombo: data.requiredCombo || [],
+        isNonRecyclable: isNonRecyclable, // Flag to indicate non-recyclable items
       });
 
-      // Hide instructions after 5 seconds
+      // Hide instructions after 5 seconds (longer for non-recyclables to let players read the hint)
       setTimeout(() => {
         setTrashInstructions((prev) => ({ ...prev, visible: false }));
-      }, 2000);
+      }, isNonRecyclable ? 3000 : 2000);
     };
 
     // Event listener for successful trash disposal
@@ -65,6 +76,7 @@ const GameHUD = () => {
     gameEngine.addEventListener("collision", handleCollision);
     gameEngine.addEventListener("trashDisposed", handleTrashDisposed);
     gameEngine.addEventListener("levelUp", handleLevelUp);
+    gameEngine.addEventListener("keyCombo", handleKeyCombo); // Add listener for key combinations
 
     // Initial state sync
     if (gameEngine.getGameState) {
@@ -81,6 +93,7 @@ const GameHUD = () => {
       gameEngine.removeEventListener("collision", handleCollision);
       gameEngine.removeEventListener("trashDisposed", handleTrashDisposed);
       gameEngine.removeEventListener("levelUp", handleLevelUp);
+      gameEngine.removeEventListener("keyCombo", handleKeyCombo); // Remove listener for key combinations
     };
   }, [gameEngine]);
 
@@ -172,6 +185,8 @@ const GameHUD = () => {
         color: "white",
         fontFamily: "Arial, sans-serif",
         fontSize: "20px",
+        width: "100%",
+        height: "100%",
       }}
     >
       <div>
@@ -183,9 +198,9 @@ const GameHUD = () => {
         <div
           style={{
             position: "absolute",
-            minHeight: "100px",
+            top: 0,
+            minHeight: "80px",
             top: "20px",
-            bottom: "20px",
             left: "50%",
             transform: "translateX(-50%)",
             padding: "10px 15px",
@@ -201,15 +216,55 @@ const GameHUD = () => {
               {getTrashIcon(trashInstructions.type)} {getTrashTypeLabel(trashInstructions.type)} detectado
             </strong>
           </div>
-          <div>
-            Presiona las teclas para desechar:{" "}
-            {formatKeyCombo(trashInstructions.requiredCombo)}
-          </div>
+          {trashInstructions.isNonRecyclable && (
+            <div style={{ 
+              fontSize: "12px", 
+              marginTop: "5px", 
+              fontStyle: "italic",
+              color: "#ff9999" 
+            }}>
+              <span>¿Seguro que no hay otra forma? 👀</span>
+            </div>
+          )}
         </div>
       )}
 
       {gameStats.currentScene === CONFIG.SCENES.SCORE_SCREEN && <ScoreScreen />}
       {gameStats.currentScene === CONFIG.SCENES.MAIN_MENU && <MainMenu />}
+
+      {/* Current Key Combo Display */}
+      {(gameStats.currentScene === CONFIG.SCENES.GAME) && (
+        <div
+          style={{
+            position: "absolute",
+            bottom: "20px",
+            height: "80px",
+            left: "50%",
+            transform: "translateX(-50%)",
+            backgroundColor: "rgba(0, 0, 0, 0.6)",
+            borderRadius: "5px",
+            padding: "10px 15px",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+          }}
+        >
+          <div style={{ fontSize: "14px", marginBottom: "5px", color: "#aaaaaa" }}>
+            Combinación actual:
+          </div>
+          <div style={{ 
+            minHeight: "30px", 
+            minWidth: "120px",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            fontSize: "24px",
+            letterSpacing: "8px"
+          }}>
+            {currentKeyCombo.length > 0 ? formatKeyCombo(currentKeyCombo) : "⋯"}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

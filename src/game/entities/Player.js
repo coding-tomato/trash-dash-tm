@@ -137,10 +137,7 @@ class Player {
   }
 
   checkCollision(object) {
-    // Check if the object has a collider or if we need to create a temporary one
-    let objectCollider;
-    objectCollider = object.collider;
-    const collision = this.collider.intersectsBox(objectCollider)
+    const collision = this.collider.intersectsBox(object.collider)
     if (collision) {
       console.log("Collision detected with object:", object);
     }

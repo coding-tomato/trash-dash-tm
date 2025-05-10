@@ -1,5 +1,5 @@
 export const CONFIG = {
-  DEBUG: true,
+  DEBUG: false,
   SCENES: {
     MAIN_MENU: "MAIN_MENU",
     GAME: "GAME",
@@ -10,7 +10,8 @@ export const CONFIG = {
     plastic: ["left", "right", "left", "right"],
     metal: ["up", "up", "down", "down"],
     organic: ["down", "down", "up", "up"],
-    nonRecyclable: ["up", "up", "up", "up"]
+    nonRecyclable: ["up", "up", "up", "up"],
+    // Special hidden combination for non-recyclables is ["down", "down", "down", "down"]
   },
   LEVELS_CONFIG: [
     {

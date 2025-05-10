@@ -25,10 +25,49 @@ class TrashSpawner {
       this.spawnTrash();
       this.lastSpawnTime = currentTime;
     }
-
-    this.trashItems = this.trashItems.filter((trash) =>
-      trash.update(deltaTime)
-    );
+    
+    // Store the current length before filtering
+    const oldLength = this.trashItems.length;
+    
+    // Keep track of indices to update activeCollisionIndex if needed
+    let removedCount = 0;
+    for (let i = 0; i < oldLength; i++) {
+      const isActive = i === this.activeCollisionIndex;
+      const stillActive = this.trashItems[i].update(deltaTime);
+      
+      if (!stillActive) {
+        removedCount++;
+        // If we're removing the active collision item
+        if (isActive) {
+          this.activeCollisionIndex = null;
+          console.log("Active collision item was removed");
+        }
+        // If we're removing an item before the active collision, adjust the index
+        else if (this.activeCollisionIndex !== null && i < this.activeCollisionIndex) {
+          this.activeCollisionIndex--;
+          console.log("Adjusting activeCollisionIndex to", this.activeCollisionIndex);
+        }
+      }
+    }
+    
+    // Filter out items that return false from update (they've completed their lifecycle)
+    this.trashItems = this.trashItems.filter(trash => {
+      // Keep items that are still valid and have not exceeded their lifespan
+      return trash.mesh !== null && Date.now() - trash.createdAt < trash.lifespan;
+    });
+    
+    // Sanity check - if the array length changed unexpectedly
+    if (oldLength - removedCount !== this.trashItems.length) {
+      console.log("Warning: Unexpected array length change", 
+                oldLength, removedCount, this.trashItems.length);
+      
+      // If the activeCollisionIndex is out of bounds after filtering, reset it
+      if (this.activeCollisionIndex !== null && 
+          this.activeCollisionIndex >= this.trashItems.length) {
+        console.log("Resetting out-of-bounds activeCollisionIndex");
+        this.activeCollisionIndex = null;
+      }
+    }
   }
 
   spawnTrash() {
@@ -58,8 +97,14 @@ class TrashSpawner {
   }
 
   destroy() {
-    this.trashItems.forEach((trash) => trash.destroy());
+    this.trashItems.forEach((trash) => {
+      if (trash && typeof trash.destroy === 'function') {
+        trash.destroy();
+      }
+    });
     this.trashItems = [];
+    this.activeCollisionIndex = null;
+    console.log("TrashSpawner destroyed and reset");
   }
 }
 

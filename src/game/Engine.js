@@ -79,7 +79,6 @@ class Game {
       this.controls.dampingFactor = 0.05;
       this.controls.minDistance = this.cameraConfig.minDistance;
       this.controls.maxDistance = this.cameraConfig.maxDistance;
-      console.log("Debug mode: Orbit controls enabled");
     }
 
     // Initialize audio 
@@ -90,11 +89,65 @@ class Game {
     // Start pre-loading assets
     this.preloadAssets().then(() => {
       this.setupGameObjects();
-      this.animate();
+      this.startIntroAnimation().then(() => {
+        this.animate();
+      });
     });
 
     window.addEventListener("resize", this.handleResize.bind(this));
     this.isInitialized = true;
+  }
+
+  // Start intro camera animation
+  startIntroAnimation() {
+    return new Promise(resolve => {
+      // Set camera to an offset position for animation
+      const startPosition = new THREE.Vector3(
+        this.cameraConfig.initialPosition.x + 5,
+        this.cameraConfig.initialPosition.y + 2,
+        this.cameraConfig.initialPosition.z + 3
+      );
+      
+      this.camera.position.copy(startPosition);
+      
+      // Animation duration in milliseconds
+      const duration = 2000;
+      const startTime = Date.now();
+      const endPosition = this.cameraConfig.initialPosition.clone();
+      
+      // Animation function
+      const animateCamera = () => {
+        const currentTime = Date.now();
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        
+        // Use an easing function for smoother animation
+        const easeOutCubic = (t) => 1 - Math.pow(1 - t, 3);
+        const easedProgress = easeOutCubic(progress);
+        
+        // Interpolate between start and end positions
+        const newPosition = new THREE.Vector3().lerpVectors(
+          startPosition,
+          endPosition,
+          easedProgress
+        );
+        
+        this.camera.position.copy(newPosition);
+        this.camera.lookAt(this.cameraConfig.lookAt);
+        
+        // Render the scene to show the animation
+        this.renderer.render(this.scene, this.camera);
+        
+        if (progress < 1) {
+          requestAnimationFrame(animateCamera);
+        } else {
+          resolve(); // Animation complete
+        }
+      };
+      
+      // Start animation
+      animateCamera();
+    });
   }
 
   // Add method to load sounds
@@ -135,7 +188,6 @@ class Game {
       .then(() => {
         this.assetsLoaded = true;
         this.emitEvent("loadingAssets", { loading: false });
-        console.log("Assets loaded successfully");
       })
       .catch(error => {
         console.error("Error loading assets:", error);
@@ -254,8 +306,14 @@ class Game {
     // Disable controls while paused
     this.controlsEnabled = false;
     
+    // Update game state
+    this.stats.setPlaying(false);
+    
     // Notify listeners that game is paused
     this.emitEvent("gamePaused", {});
+    
+    // Also update the React state
+    this.updateReactState();
   }
 
   resume() {
@@ -263,22 +321,37 @@ class Game {
     
     this.controlsEnabled = true;
     this.lastUpdate = Date.now(); // Reset last update time
+    
+    // Update game state
+    this.stats.setPlaying(true);
+    
+    // Start animation loop
     this.animate();
     
     // Notify listeners that game is resumed
     this.emitEvent("gameResumed", {});
+    
+    // Also update the React state
+    this.updateReactState();
   }
 
   getGameState() {
     return this.stats.getState();
   }
 
-  resetCamera() {
-    if (!this.camera || !this.controls) return;
+  resetCamera(animate = false) {
+    if (!this.camera) return;
     
-    this.camera.position.copy(this.cameraConfig.initialPosition);
-    this.controls.target.copy(this.cameraConfig.lookAt);
-    this.controls.update();
+    if (animate) {
+      return this.startIntroAnimation();
+    } else {
+      this.camera.position.copy(this.cameraConfig.initialPosition);
+      if (this.controls) {
+        this.controls.target.copy(this.cameraConfig.lookAt);
+        this.controls.update();
+      }
+      return Promise.resolve();
+    }
   }
   
   focusCamera(position) {
@@ -298,7 +371,7 @@ class Game {
 
   removeEventListener(event, callback) {
     if (!this.eventListeners[event]) return;
-    this.eventListeners[event].filter(
+    this.eventListeners[event] = this.eventListeners[event].filter(
       (cb) => cb !== callback
     );
   }
@@ -367,17 +440,29 @@ class Game {
   checkCollisions() {
     const trashItems = this.trashSpawner.getTrashItems();
     
+    // First, check if there's an active collision
     if (this.trashSpawner.activeCollisionIndex !== null) {
+      // Verify that the activeCollisionIndex is valid (in bounds)
+      if (this.trashSpawner.activeCollisionIndex >= this.trashSpawner.trashItems.length) {
+        console.log("Invalid activeCollisionIndex, resetting", this.trashSpawner.activeCollisionIndex);
+        this.trashSpawner.activeCollisionIndex = null;
+        return;
+      }
+      
       const activeTrash = this.trashSpawner.trashItems[this.trashSpawner.activeCollisionIndex];
       
+      // If the activeTrash exists and is still colliding with the player
       if (activeTrash && this.player.checkCollision(activeTrash)) {
+        // Still colliding, return early
         return;
       } else if (activeTrash) {
         // Reset the collision if player is no longer colliding with it
+        console.log("No longer colliding with active trash", this.trashSpawner.activeCollisionIndex);
         activeTrash.resetCollision();
         this.trashSpawner.activeCollisionIndex = null;
       } else {
         // If the activeTrash no longer exists, reset activeCollision
+        console.log("Active trash no longer exists", this.trashSpawner.activeCollisionIndex);
         this.trashSpawner.activeCollisionIndex = null;
       }
     }
@@ -395,7 +480,8 @@ class Game {
         this.emitEvent("collision", { 
           type: trash.getCollisionType(),
           count: this.stats.collisionsCount,
-          requiredCombo: trash.requiredCombination
+          requiredCombo: trash.requiredCombination,
+          isNonRecyclable: trash.getCollisionType() === "nonRecyclable" // Add flag to identify non-recyclable items
         });
         
         break;
@@ -406,12 +492,31 @@ class Game {
   handleKeyCombo(combo) {
     this.keyCombo = combo;
     
+    // Emit event with the current key combination so UI can update
+    this.emitEvent("keyCombo", combo);
+    
     // Check for trash disposal - but only for the active collision
     if (this.trashSpawner && this.trashSpawner.activeCollisionIndex !== null) {
+      console.log("Checking active collision at index:", this.trashSpawner.activeCollisionIndex);
+      
+      if (this.trashSpawner.activeCollisionIndex >= this.trashSpawner.trashItems.length) {
+        console.error("Invalid activeCollisionIndex, resetting", this.trashSpawner.activeCollisionIndex);
+        this.trashSpawner.activeCollisionIndex = null;
+        return;
+      }
+      
       const activeTrash = this.trashSpawner.trashItems[this.trashSpawner.activeCollisionIndex];
       
+      if (!activeTrash) {
+        console.error("No active trash found at index", this.trashSpawner.activeCollisionIndex);
+        this.trashSpawner.activeCollisionIndex = null;
+        return;
+      }
+      
       // Check if this trash can be disposed with the current combo
-      if (activeTrash && activeTrash.checkCombination(combo)) {
+      const isCorrectCombo = activeTrash.checkCombination(combo);
+      
+      if (isCorrectCombo) {
         let scoreToAdd = 0;
 
         // Different scores for different trash types
@@ -433,8 +538,15 @@ class Game {
             this.playSound('good');
             break;
           case "nonRecyclable":
-            scoreToAdd = -20;
-            this.playSound('bad');
+            // Check for special disposal case - player found hidden "down, down, down, down" combo
+            if (activeTrash.isSpecialDisposalCase()) {
+              scoreToAdd = 20;  // Reward with higher score for finding secret
+              this.playSound('good');
+              console.log("Special disposal of non-recyclable item! Bonus score!");
+            } else {
+              scoreToAdd = -20; // Regular penalty for using default combo
+              this.playSound('bad');
+            }
             break;
           default:
             scoreToAdd = 5;
@@ -446,11 +558,23 @@ class Game {
 
         const trashType = activeTrash.type;
         
+        console.log("Successfully disposed trash type:", activeTrash.type);
+        
+        // Store the index before destroying
+        const indexToRemove = this.trashSpawner.activeCollisionIndex;
+        
+        // Reset the collision state first
+        activeTrash.resetCollision();
+        
+        // Destroy the trash object
         activeTrash.destroy();
+        
+        // Player jump animation
         this.player.jump();
         
-        // Remove from array
-        this.trashSpawner.trashItems.splice(this.trashSpawner.activeCollisionIndex, 1);
+        // Remove from array safely
+        this.trashSpawner.trashItems.splice(indexToRemove, 1);
+        console.log("Removed trash at index:", indexToRemove, "new array length:", this.trashSpawner.trashItems.length);
         
         // Clear the active collision so the next item can be processed
         this.trashSpawner.activeCollisionIndex = null;
@@ -537,6 +661,7 @@ class Game {
     // Reset key combinations
     if (this.input) {
       this.input.resetCombo();
+      this.emitEvent("keyCombo", []); // Emit empty key combo to update the UI
     }
     
     // Notify about game reset
