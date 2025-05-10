@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import assetLoader from "../AssetLoader";
+import { CONFIG } from "../../config";
 
 class Trash {
   constructor(scene, type, position) {
@@ -27,18 +28,7 @@ class Trash {
   }
 
   getRequiredCombination() {
-    switch (this.type) {
-      case "glass":
-        return ["up", "down", "up", "down"];
-      case "plastic":
-        return ["left", "right", "left", "right"];
-      case "metal":
-        return ["up", "up", "down", "down"];
-      case "organic":
-        return ["down", "down", "up", "up"];
-      default:
-        return ["up", "up", "up", "up"];
-    }
+    return CONFIG.TRASH_COMBINATIONS[this.type] || CONFIG.TRASH_COMBINATIONS.nonRecyclable;
   }
 
   selectRandomModel(type) {

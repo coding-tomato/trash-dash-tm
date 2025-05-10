@@ -5,6 +5,13 @@ export const CONFIG = {
     GAME: "GAME",
     SCORE_SCREEN: "SCORE_SCREEN",
   },
+  TRASH_COMBINATIONS: {
+    glass: ["up", "down", "up", "down"],
+    plastic: ["left", "right", "left", "right"],
+    metal: ["up", "up", "down", "down"],
+    organic: ["down", "down", "up", "up"],
+    nonRecyclable: ["up", "up", "up", "up"]
+  },
   LEVELS_CONFIG: [
     {
       SCORE_TO_BEAT: 20,

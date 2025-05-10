@@ -373,6 +373,7 @@ class Game {
             break;
           default:
             scoreToAdd = 5;
+            break;
         }
 
         this.stats.addScore(scoreToAdd);

@@ -154,7 +154,6 @@ const GameHUD = () => {
         color: "white",
         fontFamily: "Arial, sans-serif",
         fontSize: "20px",
-        textShadow: "1px 1px 2px black",
       }}
     >
       <div>

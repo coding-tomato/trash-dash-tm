@@ -36,7 +36,6 @@ const MainMenu = () => {
     gameEngine.resetGame();
     gameEngine.resume();
 
-    // Change the current scene to GAME
     gameEngine.setCurrentScene(CONFIG.SCENES.GAME);
     gameEngine.startIntroAnimation();
 
@@ -98,8 +97,7 @@ const MainMenu = () => {
         }}
       >
         <p style={{ marginBottom: "1rem" }}>
-          Help clean up the environment by collecting trash! Use arrow key
-          combos to sort different types of waste.
+          ¡Entra en la fabrica y ayuda a reciclar los residuos!
         </p>
       </div>
 
@@ -136,7 +134,7 @@ const MainMenu = () => {
 
       {loadingAssets && (
         <div style={{ marginTop: "1rem", fontSize: "0.9rem" }}>
-          Pre-loading 3D models for smoother gameplay...
+          Pre-cargando archivos. Por favor, espera...
         </div>
       )}
 
