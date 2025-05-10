@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { useGameContext } from '../contexts/GameContext';
+import { useGameContext } from '../../contexts/GameContext';
 
 const GameControls = () => {
   const gameEngine = useGameContext();
@@ -11,6 +11,7 @@ const GameControls = () => {
     // Event listeners to update local component state
     const handleGamePaused = () => setIsPlaying(false);
     const handleGameResumed = () => setIsPlaying(true);
+    const handleGameReset = () => setIsPlaying(false);
     const handleStateChange = (newState) => {
       if (newState.isPlaying !== undefined) {
         setIsPlaying(newState.isPlaying);
@@ -20,6 +21,7 @@ const GameControls = () => {
     // Add event listeners
     gameEngine.addEventListener('gamePaused', handleGamePaused);
     gameEngine.addEventListener('gameResumed', handleGameResumed);
+    gameEngine.addEventListener('gameReset', handleGameReset);
     gameEngine.addEventListener('stateChange', handleStateChange);
     
     // Initial state sync
@@ -32,6 +34,7 @@ const GameControls = () => {
     return () => {
       gameEngine.removeEventListener('gamePaused', handleGamePaused);
       gameEngine.removeEventListener('gameResumed', handleGameResumed);
+      gameEngine.removeEventListener('gameReset', handleGameReset);
       gameEngine.removeEventListener('stateChange', handleStateChange);
     };
   }, [gameEngine]);
@@ -48,6 +51,10 @@ const GameControls = () => {
         gameEngine.resume();
       }
     }
+  }, [gameEngine]);
+
+  const handleResetClick = useCallback(() => {
+    if (gameEngine) gameEngine.resetGame();
   }, [gameEngine]);
   
   return (
@@ -88,6 +95,20 @@ const GameControls = () => {
           Pause
         </button>
       )}
+
+      <button 
+        onClick={handleResetClick}
+        style={{
+          padding: '10px 20px',
+          backgroundColor: '#2196F3',
+          color: 'white',
+          border: 'none',
+          borderRadius: '4px',
+          cursor: 'pointer',
+        }}
+      >
+        Reset Game
+      </button>
       
       {/* Instructions text */}
       <div style={{ 

@@ -1,13 +1,22 @@
+import { CONFIG } from "../config";
+
 class Stats {
   constructor() {
     this.score = 0;
-    this.level = 1;
+    this.totalScore = 0;
+    this.level = 0;
+    this.currentScene = CONFIG.SCENES.MAIN_MENU;
     this.isPlaying = true;
     this.collisionsCount = 0;
   }
 
   addScore(amount) {
     this.score += amount;
+    this.totalScore += amount;
+  }
+
+  setCurrentScene(scene) {
+    this.currentScene = scene;
   }
 
   setLevel(level) {
@@ -24,17 +33,20 @@ class Stats {
 
   reset() {
     this.score = 0;
-    this.level = 1;
+    this.level = 0;
     this.isPlaying = true;
     this.collisionsCount = 0;
+    this.currentScene = CONFIG.SCENES.MAIN_MENU;
   }
 
   getState() {
     return {
       score: this.score,
+      totalScore: this.totalScore,
       level: this.level,
       isPlaying: this.isPlaying,
       collisionsCount: this.collisionsCount,
+      currentScene: this.currentScene,
     };
   }
 }

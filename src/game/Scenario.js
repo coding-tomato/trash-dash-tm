@@ -40,9 +40,6 @@ class Scenario {
       this.objects.push(mesh);
       return mesh;
     };
-    // Posts/columns
-    createShadowCaster(5, 1.5, -3, 0.5, 3, 0.5, 0xffb6c1);
-    createShadowCaster(-2, 2, 4, 0.5, 4, 0.5, 0xafeeee);
   }
 
   setupGridHelper() {
@@ -53,9 +50,9 @@ class Scenario {
 
   setupLighting() {
     // Torch-like spotlight
-    this.spotLight = new THREE.SpotLight(0xffffff, 60);
+    this.spotLight = new THREE.SpotLight(0xffffff, 40);
     this.spotLight.angle = Math.PI;
-    this.spotLight.penumbra = 0.5;
+    this.spotLight.penumbra = 0.9;
     this.spotLight.decay = 2.0;
     this.spotLight.distance = 18;
     this.spotLight.castShadow = true;
@@ -64,7 +61,7 @@ class Scenario {
     this.spotLight.shadow.camera.near = 0.5;
     this.spotLight.shadow.camera.far = 20;
     this.spotLight.shadow.bias = -0.0005;
-    this.spotLight.position.set(0, 6, 0);
+    this.spotLight.position.set(0, 4, 0);
     const spotTarget = new THREE.Object3D();
     spotTarget.position.set(0, 0, 0);
     this.scene.add(spotTarget);

@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { useGameContext } from '../contexts/GameContext';
+import { useGameContext } from '../../contexts/GameContext';
 
 const GameContainer = () => {
   const containerRef = useRef(null);

@@ -5,8 +5,10 @@ import Scenario from "./Scenario";
 import Input from "./Input";
 import TrashSpawner from "./entities/TrashSpawner";
 import Stats from "./Stats";
+import { CONFIG } from "../config";
+import assetLoader from "./AssetLoader";
 
-class Engine {
+class Game {
   constructor(containerId) {
     this.containerId = containerId;
     this.scene = null;
@@ -17,10 +19,11 @@ class Engine {
     this.isInitialized = false;
     this.animationId = null;
     this.stats = new Stats();
+    this.assetsLoaded = false;
     
     this.cameraConfig = {
-      initialPosition: new THREE.Vector3(0, 5, 10),
-      lookAt: new THREE.Vector3(0, 0, 0),
+      initialPosition: new THREE.Vector3(0, 3, 4),
+      lookAt: new THREE.Vector3(0, 2, 0),
       minDistance: 2,
       maxDistance: 30
     };
@@ -61,13 +64,33 @@ class Engine {
     this.renderer.shadowMap.enabled = true;
     container.appendChild(this.renderer.domElement);
 
-    // OrbitControls
-    this.controls = new OrbitControls(this.camera, this.renderer.domElement);
-    this.controls.enableDamping = true; // Smooth camera movement
-    this.controls.dampingFactor = 0.05;
-    this.controls.minDistance = this.cameraConfig.minDistance;
-    this.controls.maxDistance = this.cameraConfig.maxDistance;
-    
+    // Start pre-loading assets
+    this.preloadAssets().then(() => {
+      this.setupGameObjects();
+      this.animate();
+    });
+
+    window.addEventListener("resize", this.handleResize.bind(this));
+    this.isInitialized = true;
+  }
+
+  preloadAssets() {
+    // Show loading status
+    this.emitEvent("loadingAssets", { loading: true });
+
+    return assetLoader.preloadAssets()
+      .then(() => {
+        this.assetsLoaded = true;
+        this.emitEvent("loadingAssets", { loading: false });
+        console.log("Assets loaded successfully");
+      })
+      .catch(error => {
+        console.error("Error loading assets:", error);
+        this.emitEvent("loadingAssets", { loading: false, error: true });
+      });
+  }
+
+  setupGameObjects() {
     this.player = new Player(this.scene);
     this.gameObjects.push({
       id: "player",
@@ -78,10 +101,10 @@ class Engine {
 
     this.scenario = new Scenario(this.scene);
 
-    this.trashSpawner = new TrashSpawner(this.scene, { 
-      width: 30, 
-      depth: 30, 
-      height: 15 
+    this.trashSpawner = new TrashSpawner(this.scene, {
+      width: 30,
+      depth: 30,
+      height: 15
     });
     this.gameObjects.push({
       id: "trashSpawner",
@@ -95,12 +118,6 @@ class Engine {
       onKeyCombo: (combo) => this.handleKeyCombo(combo)
     });
     this.input.attach();
-
-    window.addEventListener("resize", this.handleResize.bind(this));
-
-    this.isInitialized = true;
-
-    this.animate();
   }
 
   animate() {
@@ -126,7 +143,6 @@ class Engine {
       this.checkCollisions();
     }
 
-    this.updateReactState();
 
     this.renderer.render(this.scene, this.camera);
   }
@@ -139,14 +155,14 @@ class Engine {
     // You can still use this for non-movement related inputs
   }
 
+  setCurrentScene(scene) {
+    if (!this.isInitialized) return;
+    this.stats.setCurrentScene(scene);
+    this.updateReactState();
+  }
+
   updateReactState() {
-    if (this.player) {
-      const playerState = this.player.getGameState();
-      if (playerState.score !== this.stats.score) {
-        this.stats.score = playerState.score;
-        this.emitEvent("stateChange", this.stats.getState());
-      }
-    }
+    this.emitEvent("stateChange", this.stats.getState());
   }
 
   handleResize() {
@@ -176,15 +192,6 @@ class Engine {
     }
   }
 
-  updateGameState(newState) {
-    // Update stats from newState
-    if (typeof newState.score !== 'undefined') this.stats.score = newState.score;
-    if (typeof newState.level !== 'undefined') this.stats.level = newState.level;
-    if (typeof newState.isPlaying !== 'undefined') this.stats.isPlaying = newState.isPlaying;
-    if (typeof newState.collisionsCount !== 'undefined') this.stats.collisionsCount = newState.collisionsCount;
-    this.emitEvent("stateChange", this.stats.getState());
-  }
-
   pause() {
     if (this.animationId) {
       cancelAnimationFrame(this.animationId);
@@ -210,10 +217,6 @@ class Engine {
   }
 
   getGameState() {
-    if (this.player) {
-      const playerState = this.player.getGameState();
-      this.stats.score = playerState.score;
-    }
     return this.stats.getState();
   }
 
@@ -304,13 +307,10 @@ class Engine {
   checkCollisions() {
     const trashItems = this.trashSpawner.getTrashItems();
     
-    // If we already have an active collision, only check that one
     if (this.trashSpawner.activeCollisionIndex !== null) {
       const activeTrash = this.trashSpawner.trashItems[this.trashSpawner.activeCollisionIndex];
       
-      // Check if player is still colliding with the active trash
       if (activeTrash && this.player.checkCollision(activeTrash)) {
-        // Keep the active collision state
         return;
       } else if (activeTrash) {
         // Reset the collision if player is no longer colliding with it
@@ -338,7 +338,6 @@ class Engine {
           requiredCombo: trash.requiredCombination
         });
         
-        // Only process the first collision
         break;
       }
     }
@@ -354,16 +353,29 @@ class Engine {
       // Check if this trash can be disposed with the current combo
       if (activeTrash && activeTrash.checkCombination(combo)) {
         let scoreToAdd = 0;
-        if (activeTrash.type === "plastic") {
-          scoreToAdd = 20;
-        } else if (activeTrash.type === "glass") {
-          scoreToAdd = 30;
+
+        // Different scores for different trash types
+        switch(activeTrash.type) {
+          case "glass":
+            scoreToAdd = 10;
+            break;
+          case "plastic": 
+            scoreToAdd = 10;
+            break;
+          case "metal":
+            scoreToAdd = 15;
+            break;
+          case "organic":
+            scoreToAdd = 5;
+            break;
+          default:
+            scoreToAdd = 5;
         }
 
         this.stats.addScore(scoreToAdd);
-        if (this.player) this.player.addScore(scoreToAdd);
-        
+
         const trashType = activeTrash.type;
+        
         activeTrash.destroy();
         
         // Remove from array
@@ -382,17 +394,86 @@ class Engine {
           type: trashType,
           score: this.stats.score
         });
+
+        if (
+          this.stats.score >= CONFIG.LEVELS_CONFIG[this.stats.level].SCORE_TO_BEAT
+        ) {
+          if (this.stats.level === CONFIG.LEVELS_CONFIG.length - 1) {
+            this.setCurrentScene(CONFIG.SCENES.SCORE_SCREEN);
+            this.pause();
+          }
+          else {
+            this.stats.setLevel(this.stats.level + 1);
+            this.stats.score = 0;
+            this.emitEvent("levelUp", this.stats.level);
+          }
+        }
+
+        this.updateReactState();
       }
     }
   }
   
-  /**
-   * Enable or disable collision detection
-   * @param {boolean} enabled - Whether collisions should be enabled
-   */
   setCollisionsEnabled(enabled) {
     this.collisionsEnabled = enabled;
   }
+
+  resetGame() {
+    if (!this.isInitialized) return;
+
+    // Reset player position and score
+    if (this.player) {
+      // Destroy and recreate the player to reset its state
+      this.player.destroy(this.scene);
+      this.player = new Player(this.scene);
+      
+      // Update the player reference in gameObjects
+      const playerIndex = this.gameObjects.findIndex(obj => obj.id === "player");
+      if (playerIndex !== -1) {
+        this.gameObjects[playerIndex] = {
+          id: "player",
+          type: "player",
+          object: this.player,
+          update: (delta) => this.player.update(delta), // Add the update function for the player
+        };
+      }
+    }
+
+    // Clear all trash items
+    if (this.trashSpawner) {
+      this.trashSpawner.destroy();
+      this.trashSpawner = new TrashSpawner(this.scene, { 
+        width: 30, 
+        depth: 30, 
+        height: 15 
+      });
+      
+      // Update the trashSpawner reference in gameObjects
+      const trashIndex = this.gameObjects.findIndex(obj => obj.id === "trashSpawner");
+      if (trashIndex !== -1) {
+        this.gameObjects[trashIndex] = {
+          id: "trashSpawner",
+          type: "environment",
+          object: this.trashSpawner,
+          update: (delta) => this.trashSpawner.update(delta),
+        };
+      }
+    }
+
+    // Reset the stats
+    this.stats.reset();
+    
+    // Reset key combinations
+    if (this.input) {
+      this.input.resetCombo();
+    }
+    
+    // Notify about game reset
+    this.emitEvent("gameReset", this.stats.getState());
+    
+    // Pause the game
+    this.pause();
+  }
 }
 
-export default Engine;
+export default Game;

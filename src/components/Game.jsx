@@ -1,7 +1,7 @@
 import React from 'react';
-import GameContainer from './GameContainer';
-import GameHUD from './GameHUD';
-import GameControls from './GameControls';
+import GameContainer from './scenes/GameContainer';
+import GameHUD from './scenes/GameHUD';
+import GameControls from './scenes/GameControls';
 import { GameProvider } from '../contexts/GameContext';
 
 const Game = () => {
