@@ -68,6 +68,7 @@ class Trash {
         "pizzaSlice",
         "eggShell",
       ],
+      paper: ["pizzaBox", "paper", "paperRoll"],
       nonRecyclable: ["jeringuilla", "bateria", "movil"],
     };
 
@@ -87,6 +88,8 @@ class Trash {
         return "botellaPlastico";
       case "organic":
         return "bananaPeel";
+      case "paper":
+        return "paper";
       default:
         return "sodaCan";
     }
@@ -138,7 +141,7 @@ class Trash {
                 break;
               case "paper":
                 material = new THREE.MeshStandardMaterial({
-                  color: 0x0000ff, // Blue
+                  color: 0x0A70DF, // Blue
                   roughness: 0.5,
                   metalness: 0.0,
                   emissive: 0x0000ff,
@@ -218,6 +221,15 @@ class Trash {
           color: 0x99cc66,
           roughness: 0.8,
           emissive: 0x99cc66,
+          emissiveIntensity: 0
+        });
+        break;
+      case "paper":
+        geometry = new THREE.BoxGeometry(1.5, 0.2, 1.5);
+        material = new THREE.MeshStandardMaterial({
+          color: 0xA07FDF,
+          roughness: 0.8,
+          emissive: 0x0074D9,
           emissiveIntensity: 0
         });
         break;

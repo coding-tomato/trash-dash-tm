@@ -130,7 +130,7 @@ const MobileEvent = () => {
           Click para esconder
         </p>
         <img
-          src={`/${phoneImages[currentImage]}`}
+          src={`${phoneImages[currentImage]}`}
           alt="Mobile Event"
           style={{
             imageRendering: "pixelated",

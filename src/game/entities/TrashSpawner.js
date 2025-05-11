@@ -9,6 +9,7 @@ class TrashSpawner {
       "metal_and_plastic",
       "glass",
       "organic",
+      "paper",
       "nonRecyclable",
     ];
     this.lastSpawnTime = 0;

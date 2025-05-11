@@ -31,6 +31,11 @@ class AssetLoader {
       pizzaSlice: './SM_PizzaSlice.fbx',
       eggShell: './SM_Eggshell.fbx',
 
+      // Paper
+      pizzaBox: './SM_PizzaBox.fbx',
+      paper: './SM_Paper.fbx',
+      paperRoll: './SM_PaperRoll.fbx',
+
       // Non-recyclable items
       jeringuilla: './SM_Jeringuilla.fbx',
       bateria: './SM_Bateria.fbx',

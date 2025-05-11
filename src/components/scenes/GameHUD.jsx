@@ -210,6 +210,14 @@ const GameHUD = () => {
         case "eggShell":
           return "Cáscara de huevo";
 
+        // Paper items
+        case "pizzaBox":
+          return "Caja de pizza";
+        case "paper":
+          return "Papel";
+        case "paperRoll":
+          return "Rollo de papel";
+
         // Non-recyclable items
         case "jeringuilla":
           return "Jeringuilla";
