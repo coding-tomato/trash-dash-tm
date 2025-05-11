@@ -8,6 +8,7 @@ import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js';
 class AssetLoader {
   constructor() {
     this.models = {};
+    this.audio = {};
     this.isLoaded = false;
     this.loadingPromise = null;
     this.modelPaths = {
@@ -17,31 +18,39 @@ class AssetLoader {
       copaRota: './SM_CopaRota.fbx',
       botellaLicor: './SM_BotellaLicor.fbx',
       
-      // Plastic items
+      // metal_and_plastic items
       botellaPlastico: './SM_BotellaPlastico.fbx',
       bolsa: './SM_Bolsa.fbx',
-      
-      // Metal items
       sodaCan: './SM_SodaCan.fbx',
       lataAtun: './SM_LataAtun.fbx',
-      movil: './SM_Movil.fbx',
       
       // Organic items
       bananaPeel: './SM_BananaPeel.fbx',
       manzana: './SM_Manzana.fbx',
       musloPollo: './SM_MusloPollo.fbx',
       pizzaSlice: './SM_PizzaSlice.fbx',
-      eggShell: './SM_EggShell.fbx',
+      eggShell: './SM_Eggshell.fbx',
 
       // Non-recyclable items
       jeringuilla: './SM_Jeringuilla.fbx',
       bateria: './SM_Bateria.fbx',
+      movil: './SM_Movil.fbx',
+
+      // Decoration/background
+      props: './SMEnviroPack.fbx'
+    };
+    
+    this.audioPaths = {
+      music: './music.mp3',
+      goodSound: './OK.wav',
+      badSound: './BAD.wav',
+      spawn: './SPAWN.mp3'
     };
   }
 
   /**
-   * Preload all models defined in modelPaths
-   * @returns {Promise} A promise that resolves when all models are loaded
+   * Preload all models and audio defined in modelPaths and audioPaths
+   * @returns {Promise} A promise that resolves when all models and audio are loaded
    */
   preloadAssets() {
     // If we've already started loading, return the existing promise
@@ -49,13 +58,14 @@ class AssetLoader {
       return this.loadingPromise;
     }
     
-    const loader = new FBXLoader();
+    const fbxLoader = new FBXLoader();
+    const audioLoader = new THREE.AudioLoader();
     const promises = [];
     
     // Load each model defined in modelPaths
     for (const [key, path] of Object.entries(this.modelPaths)) {
       const promise = new Promise((resolve, reject) => {
-        loader.load(
+        fbxLoader.load(
           path,
           (fbx) => {
             // Scale and process the model once during preload
@@ -89,12 +99,34 @@ class AssetLoader {
       promises.push(promise);
     }
     
-    // Create a single promise that resolves when all models are loaded
+    // Load each audio defined in audioPaths
+    for (const [key, path] of Object.entries(this.audioPaths)) {
+      const promise = new Promise((resolve, reject) => {
+        audioLoader.load(
+          path,
+          (buffer) => {
+            this.audio[key] = buffer;
+            resolve(buffer);
+          },
+          // Progress callback
+          undefined,
+          // Error callback
+          (error) => {
+            console.error(`Error loading audio: ${path}`, error);
+            reject(error);
+          }
+        );
+      });
+      
+      promises.push(promise);
+    }
+    
+    // Create a single promise that resolves when all assets are loaded
     this.loadingPromise = Promise.all(promises).then(() => {
       this.isLoaded = true;
       return true;
     }).catch(error => {
-      console.error('Failed to load all models:', error);
+      console.error('Failed to load all assets:', error);
       return false;
     });
     
@@ -114,6 +146,20 @@ class AssetLoader {
     
     // Clone the model to avoid modifying the original
     return this.models[modelKey].clone();
+  }
+
+  /**
+   * Get a preloaded audio buffer
+   * @param {string} audioKey - The key of the audio to retrieve
+   * @returns {AudioBuffer} The requested audio buffer
+   */
+  getAudio(audioKey) {
+    if (!this.isLoaded || !this.audio[audioKey]) {
+      console.warn(`Audio ${audioKey} not loaded yet or doesn't exist`);
+      return null;
+    }
+    
+    return this.audio[audioKey];
   }
 }
 

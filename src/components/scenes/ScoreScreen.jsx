@@ -10,7 +10,7 @@ const ScoreScreen = () => {
     if (!gameEngine) return;
     if (gameEngine.getGameState) {
       const state = gameEngine.getGameState();
-      setScore(state.totalScore || 0);
+      setScore(state.score || 0);
     }
   }, [gameEngine]);
 
@@ -66,6 +66,35 @@ const ScoreScreen = () => {
       <div
         style={{
           position: "relative",
+          marginBottom: "1rem",
+          fontSize: "0.9rem",
+          textShadow: "0 0 5px rgba(0, 0, 0, 1)",
+          background: "rgba(0, 0, 0, 0.3)",
+          borderRadius: "8px",
+          margin: "0 5rem 2rem 5rem",
+          padding: "1rem",
+          display: "flex",
+          flexDirection: "column",
+          gap: "1rem",
+        }}
+      >
+        <p>
+          A medida que crece la población, también lo hacen los residuos… y con
+          ellos, el reto de separarlos correctamente.
+        </p>
+        <p>
+          Hoy en día, esta tarea sigue siendo mayormente manual, lenta y
+          costosa.
+        </p>
+        <p>
+          La acumulación de residuos en el planeta es un problema que afecta la
+          salud de todos. ¡Esta tarea debería empezar en casa!
+        </p>
+      </div>
+
+      <div
+        style={{
+          position: "relative",
           maxWidth: "600px",
           margin: "0 auto 2rem",
           padding: "2rem",
@@ -80,11 +109,12 @@ const ScoreScreen = () => {
           style={{
             fontSize: "1.5rem",
             display: "flex",
+            gap: "1rem",
             justifyContent: "space-between",
           }}
         >
-          <span>Puntaje final:</span>
-          <span>{score || "ERROR"}</span>
+          <span>Puntaje final: </span>
+          <span>{score}</span>
         </div>
       </div>
 

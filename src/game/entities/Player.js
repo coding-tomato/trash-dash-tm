@@ -3,6 +3,9 @@ import { CONFIG } from "../../config";
 
 class Player {
   constructor(scene) {
+    // Initialize character index
+    this.characterIndex = 1; // Default to character 1
+    
     this.group = new THREE.Group();
     this.group.position.set(0, 1, -1);
 
@@ -13,7 +16,7 @@ class Player {
     this.currentFrame = 0;
     this.animationSpeed = 10; // Increased animation speed
     this.animationCounter = 0;
-    
+
     // Jump properties
     this.isJumping = false;
     this.jumpHeight = 0.6;
@@ -22,17 +25,14 @@ class Player {
     this.initialY = 1; // Store the initial Y position
 
     // Load the sprite texture
-    const textureLoader = new THREE.TextureLoader();
-    const spriteTexture = textureLoader.load("./characters2_idle.png");
-    spriteTexture.magFilter = THREE.NearestFilter;
-    spriteTexture.minFilter = THREE.NearestFilter;
-    spriteTexture.flipY = true;
+    this.loadCharacterSprite();
 
     // Create a plane geometry for the sprite
     const aspectRatio = this.frameWidth / this.frameHeight;
     const planeGeometry = new THREE.PlaneGeometry(2 * aspectRatio, 2); // Adjust size as needed
-    const planeMaterial = new THREE.MeshBasicMaterial({
-      map: spriteTexture,
+    
+    this.planeMaterial = new THREE.MeshBasicMaterial({
+      map: this.spriteTexture,
       transparent: true,
       side: THREE.DoubleSide,
     });
@@ -41,7 +41,7 @@ class Player {
     this.updateUVs(planeGeometry);
 
     // Create a plane mesh instead of sprite
-    this.mesh = new THREE.Mesh(planeGeometry, planeMaterial);
+    this.mesh = new THREE.Mesh(planeGeometry, this.planeMaterial);
     // Adjust rotation to fix orientation
     this.mesh.rotation.y = 0; // Changed from Math.PI to correctly orient the player
     // Remove the tilt to make sure it's flat facing the camera
@@ -52,13 +52,14 @@ class Player {
     // Adjust the group rotation to face the camera correctly
     this.group.rotation.y = Math.PI; // Face forward
 
-    const colliderSize = new THREE.Vector3(4, 5, 5); // Slightly larger than the player
+    // Massive collider size
+    this.colliderSize = new THREE.Vector3(40, 50, 50); // Store for reuse
     this.collider = new THREE.Box3();
 
     const boxGeometry = new THREE.BoxGeometry(
-      colliderSize.x,
-      colliderSize.y,
-      colliderSize.z
+      this.colliderSize.x,
+      this.colliderSize.y,
+      this.colliderSize.z
     );
     const wireframeMaterial = new THREE.MeshBasicMaterial({
       color: 0x00ff00,
@@ -71,6 +72,17 @@ class Player {
     this.group.add(this.colliderMesh);
 
     scene.add(this.group);
+  }
+
+  loadCharacterSprite() {
+    // Load the sprite texture based on the character index
+    const textureLoader = new THREE.TextureLoader();
+    const spritePath = `./characters${this.characterIndex}_idle.png`;
+    this.spriteTexture = textureLoader.load(spritePath);
+    this.spriteTexture.magFilter = THREE.NearestFilter;
+    this.spriteTexture.minFilter = THREE.NearestFilter;
+    this.spriteTexture.flipY = true;
+    return this.spriteTexture;
   }
 
   updateUVs(geometry) {
@@ -105,6 +117,23 @@ class Player {
     }
   }
 
+  setCharacter(index) {
+    this.characterIndex = index;
+    
+    // Update the sprite texture when character changes
+    this.loadCharacterSprite();
+    
+    // Update the material's map with the new texture
+    if (this.planeMaterial) {
+      this.planeMaterial.map = this.spriteTexture;
+      this.planeMaterial.needsUpdate = true;
+    }
+    
+    // Reset animation frame
+    this.currentFrame = 0;
+    this.updateUVs(this.mesh.geometry);
+  }
+
   update(deltaTime) {
     // Update animation
     this.animationCounter += deltaTime * this.animationSpeed;
@@ -119,7 +148,7 @@ class Player {
     // Handle jump animation if jumping
     if (this.isJumping) {
       this.jumpTimer += deltaTime;
-      
+
       if (this.jumpTimer >= this.jumpDuration) {
         // Jump is complete, reset position and state
         this.group.position.y = this.initialY;
@@ -132,15 +161,22 @@ class Player {
       }
     }
 
-    // Update the box collider to match the player's position
-    this.collider.setFromObject(this.mesh);
+    // Set collider to always be massive and centered on the player group
+    const center = this.group.position.clone();
+    this.collider.min.copy(
+      center.clone().sub(this.colliderSize.clone().multiplyScalar(0.5))
+    );
+    this.collider.max.copy(
+      center.clone().add(this.colliderSize.clone().multiplyScalar(0.5))
+    );
+    // Also update the wireframe mesh position
+    if (this.colliderMesh) {
+      this.colliderMesh.position.copy(center);
+    }
   }
 
   checkCollision(object) {
-    const collision = this.collider.intersectsBox(object.collider)
-    if (collision) {
-      console.log("Collision detected with object:", object);
-    }
+    const collision = this.collider.intersectsBox(object.collider);
     return collision;
   }
 

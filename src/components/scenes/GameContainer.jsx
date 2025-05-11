@@ -1,19 +1,23 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useGameContext } from '../../contexts/GameContext';
 
 const GameContainer = () => {
   const containerRef = useRef(null);
   const gameEngine = useGameContext();
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
   
   useEffect(() => {
     if (containerRef.current && gameEngine) {
       if (!gameEngine.isInitialized) {
         gameEngine.init();
-      } else if (gameEngine.animationId === null) {
+        setIsInitialLoad(false);
+      } else if (gameEngine.animationId === null && isInitialLoad) {
+        // Only auto-resume on initial load, not when manually paused
         gameEngine.resume();
+        setIsInitialLoad(false);
       }
     }
-  }, [gameEngine]);
+  }, [gameEngine, isInitialLoad]);
   
   return (
     <div 

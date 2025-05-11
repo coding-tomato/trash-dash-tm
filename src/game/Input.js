@@ -26,6 +26,7 @@ class Input {
       switch (e.key) {
         case "Escape":
           if (this.handlers.onPause) this.handlers.onPause();
+          this.resetCombo();
           break;
         case " ": // For older browsers
           e.preventDefault();

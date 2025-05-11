@@ -1,8 +1,8 @@
 import React from 'react';
 import GameContainer from './scenes/GameContainer';
 import GameHUD from './scenes/GameHUD';
-import GameControls from './scenes/GameControls';
 import { GameProvider } from '../contexts/GameContext';
+import MobileEvent from './MobileEvent';
 
 const Game = () => {
   return (
@@ -13,9 +13,9 @@ const Game = () => {
         height: '100vh',
         overflow: 'hidden'
       }}>
+        <MobileEvent />
         <GameContainer />
         <GameHUD />
-        <GameControls />
       </div>
     </GameProvider>
   );

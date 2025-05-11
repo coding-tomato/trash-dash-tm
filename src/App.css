@@ -11,6 +11,9 @@
   box-sizing: border-box;
   font-family: PixelFont, Arial, sans-serif;
   letter-spacing: 4px;
+  user-select: none;
+  -webkit-user-select: none;
+  -ms-user-select: none;
 }
 
 body, html {

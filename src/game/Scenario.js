@@ -1,46 +1,14 @@
 import * as THREE from "three";
 import { CONFIG } from "../config.js";
+import assetLoader from "./AssetLoader.js";
 
 class Scenario {
   constructor(scene) {
     this.scene = scene;
     this.objects = [];
-    this.setupFloor();
-    this.setupShadowCastingObjects();
     this.setupGridHelper();
     this.setupLighting();
-  }
-
-  setupFloor() {
-    const floorGeometry = new THREE.PlaneGeometry(20, 5);
-    const floorMaterial = new THREE.MeshStandardMaterial({
-      color: 0x98fb98, // Pastel Mint
-      roughness: 0.8,
-      metalness: 0.2,
-    });
-    const floor = new THREE.Mesh(floorGeometry, floorMaterial);
-    floor.rotation.x = -Math.PI / 2;
-    floor.receiveShadow = true;
-    this.scene.add(floor);
-    this.objects.push(floor);
-  }
-
-  setupShadowCastingObjects() {
-    const createShadowCaster = (x, y, z, width, height, depth, color) => {
-      const geometry = new THREE.BoxGeometry(width, height, depth);
-      const material = new THREE.MeshStandardMaterial({
-        color: color,
-        metalness: 0.3,
-        roughness: 0.5,
-      });
-      const mesh = new THREE.Mesh(geometry, material);
-      mesh.position.set(x, y, z);
-      mesh.castShadow = true;
-      mesh.receiveShadow = true;
-      this.scene.add(mesh);
-      this.objects.push(mesh);
-      return mesh;
-    };
+    this.setupBackgroundProp();
   }
 
   setupGridHelper() {
@@ -53,7 +21,7 @@ class Scenario {
 
   setupLighting() {
     // Torch-like spotlight
-    this.spotLight = new THREE.SpotLight(0xffffff, 40);
+    this.spotLight = new THREE.SpotLight(0xffffff, 70);
     this.spotLight.angle = Math.PI;
     this.spotLight.penumbra = 0.9;
     this.spotLight.decay = 2.0;
@@ -80,6 +48,32 @@ class Scenario {
     bulbMesh.position.copy(this.spotLight.position);
     this.scene.add(bulbMesh);
     this.objects.push(bulbMesh);
+  }
+
+  setupBackgroundProp() {
+    // Only add if loaded
+    if (assetLoader.isLoaded) {
+      const decorations = [
+        { key: "props", position: [0, 0, 0] },
+      ];
+      decorations.forEach(({ key, position }) => {
+        const model = assetLoader.getModel(key);
+        if (model) {
+          model.position.set(...position);
+          model.traverse(child => {
+            if (child.isMesh) {
+              child.material = new THREE.MeshStandardMaterial({
+                color: 0x98b253,
+              });
+              child.castShadow = false;
+              child.receiveShadow = true;
+            }
+          });
+          this.scene.add(model);
+          this.objects.push(model);
+        }
+      });
+    }
   }
 }
 

@@ -3,8 +3,6 @@ import { CONFIG } from "../config";
 class Stats {
   constructor() {
     this.score = 0;
-    this.totalScore = 0;
-    this.level = 0;
     this.currentScene = CONFIG.SCENES.MAIN_MENU;
     this.isPlaying = true;
     this.collisionsCount = 0;
@@ -13,19 +11,13 @@ class Stats {
   addScore(amount) {
     if (this.score + amount < 0) {
       this.score = 0;
-    }
-    else {
+    } else {
       this.score += amount;
-      this.totalScore += amount;
     }
   }
 
   setCurrentScene(scene) {
     this.currentScene = scene;
-  }
-
-  setLevel(level) {
-    this.level = level;
   }
 
   setPlaying(isPlaying) {
@@ -38,7 +30,6 @@ class Stats {
 
   reset() {
     this.score = 0;
-    this.level = 0;
     this.isPlaying = true;
     this.collisionsCount = 0;
     this.currentScene = CONFIG.SCENES.MAIN_MENU;
@@ -47,8 +38,6 @@ class Stats {
   getState() {
     return {
       score: this.score,
-      totalScore: this.totalScore,
-      level: this.level,
       isPlaying: this.isPlaying,
       collisionsCount: this.collisionsCount,
       currentScene: this.currentScene,
