@@ -670,12 +670,11 @@ class Game {
   }
 
   startGameTimer() {
-    // End the game after 3 minutes (180000 ms)
     if (this._gameTimer) clearTimeout(this._gameTimer);
     this._gameTimer = setTimeout(() => {
       this.setCurrentScene(CONFIG.SCENES.SCORE_SCREEN);
       this.pause();
-    }, 180000);
+    }, 120000);
   }
 
   clearGameTimer() {

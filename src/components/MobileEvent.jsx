@@ -5,44 +5,40 @@ const phoneImages = ["phone1.png", "phone2.png", "phone3.png", "phone4.png"];
 
 const MobileEvent = () => {
   const gameEngine = useGameContext();
-  const [currentImage, _setCurrentImage] = useState(0);
-  const currentImageRef = useRef(0);
+  const [currentImage, setCurrentImage] = useState(0);
   const [animating, setAnimating] = useState(false);
   const [showOverlay, setShowOverlay] = useState(false);
-  const timerRef = useRef(null);
   const prevSceneRef = useRef(null); // Track previous scene
 
-  const setCurrentImage = (val) => {
-    if (typeof val === "function") {
-      currentImageRef.current = val(currentImageRef.current);
-    } else {
-      currentImageRef.current = val;
-    }
-    _setCurrentImage(currentImageRef.current);
-  };
-
-  // Helper to start the mobile event animation cycle
+  // Helper to start the mobile event (show once, random image)
   const startMobileEvent = () => {
-    // Clear any previous timers
-    clearInterval(timerRef.current);
-    setCurrentImage(0);
+    const randomIdx = Math.floor(Math.random() * phoneImages.length);
+    setCurrentImage(randomIdx);
     setShowOverlay(true);
     setAnimating(true);
-    timerRef.current = setInterval(() => {
-      if (currentImageRef.current === phoneImages.length - 1) {
-        return;
-      }
-      setCurrentImage(currentImageRef.current + 1);
-      setShowOverlay(true);
-      setAnimating(true);
-    }, 45000);
   };
 
-  // Helper to stop the mobile event animation cycle
+  // Helper to stop the mobile event
   const stopMobileEvent = () => {
-    clearInterval(timerRef.current);
     setShowOverlay(false);
     setAnimating(false);
+  };
+
+  // Handle keyboard events (space or arrow keys)
+  const handleKeyDown = (event) => {
+    if (!animating) return;
+    
+    // Hide overlay on space or any arrow key
+    if (
+      event.code === "Space" || 
+      event.code === "ArrowUp" || 
+      event.code === "ArrowDown" || 
+      event.code === "ArrowLeft" || 
+      event.code === "ArrowRight"
+    ) {
+      setAnimating(false);
+      setShowOverlay(false);
+    }
   };
 
   useEffect(() => {
@@ -73,6 +69,17 @@ const MobileEvent = () => {
       stopMobileEvent();
     };
   }, [gameEngine]);
+
+  // Add and remove keyboard event listener
+  useEffect(() => {
+    if (animating) {
+      window.addEventListener("keydown", handleKeyDown);
+    }
+    
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [animating]);
 
   return (
     <div
@@ -127,7 +134,7 @@ const MobileEvent = () => {
             textAlign: "center",
           }}
         >
-          Click para esconder
+          Presiona espacio o flechas para esconder
         </p>
         <img
           src={`${phoneImages[currentImage]}`}

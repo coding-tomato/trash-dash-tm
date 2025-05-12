@@ -17,9 +17,9 @@ class TrashSpawner {
     this.activeCollisionIndex = null;
     this.spawnSpeedupTimer = 0;
     this.spawnInterval = 4000; // Start at 4s
-    this.spawnIntervalMin = 500; // Minimum interval (1s)
-    this.spawnIntervalDecrement = 500; // Decrease by 0.5s each time
-    this.spawnSpeedupPeriod = 25000; // 45 seconds
+    this.spawnIntervalMin = 800; // Minimum interval (1s)
+    this.spawnIntervalDecrement = 700; // Decrease by 0.5s each time
+    this.spawnSpeedupPeriod = 15000; //
     this.onSpawn = null; // Callback function for spawn events
   }
 

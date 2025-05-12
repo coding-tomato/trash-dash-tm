@@ -24,6 +24,10 @@ const GameHUD = () => {
   // State to toggle combinations visibility
   const [showCombinations, setShowCombinations] = useState(true);
 
+  // Timer state for countdown
+  const [secondsLeft, setSecondsLeft] = useState(120);
+  const timerRef = React.useRef(null);
+
   // Handle pause and resume
   const togglePauseResume = useCallback(() => {
     if (!gameEngine) return;
@@ -154,6 +158,28 @@ const GameHUD = () => {
       gameEngine.removeEventListener("gameResumed", handleGameResumed);
     };
   }, [gameEngine]);
+
+  // Countdown timer effect
+  useEffect(() => {
+    if (gameStats.currentScene !== CONFIG.SCENES.GAME) {
+      setSecondsLeft(120);
+      clearInterval(timerRef.current);
+      return;
+    }
+    if (!gameStats.isPlaying) {
+      clearInterval(timerRef.current);
+      return;
+    }
+    if (timerRef.current) clearInterval(timerRef.current);
+    timerRef.current = setInterval(() => {
+      setSecondsLeft((prev) => {
+        if (prev > 0) return prev - 1;
+        clearInterval(timerRef.current);
+        return 0;
+      });
+    }, 1000);
+    return () => clearInterval(timerRef.current);
+  }, [gameStats.currentScene, gameStats.isPlaying]);
 
   // Function to get the appropriate color for the trash type
   const getTrashColor = (type) => {
@@ -441,6 +467,27 @@ const GameHUD = () => {
             </div>
           </>
         )}
+      </div>
+
+      <div
+        style={{
+          position: "absolute",
+          top: "20px",
+          right: "40px",
+          color: "#eefab3",
+          height: "40px",
+          width: "80px",
+          background: "rgba(0,0,0,0.7)",
+          padding: "8px 18px",
+          fontSize: "28px",
+          fontWeight: "bold",
+          zIndex: 20,
+          minWidth: "90px",
+          textAlign: "center",
+          letterSpacing: "2px",
+        }}
+      >
+        {gameStats.currentScene === CONFIG.SCENES.GAME ? `${secondsLeft}s` : ""}
       </div>
 
       {gameStats.currentScene === CONFIG.SCENES.SCORE_SCREEN && <ScoreScreen />}

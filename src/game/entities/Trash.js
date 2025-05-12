@@ -10,13 +10,14 @@ class Trash {
     this.position = position;
     this.velocity = new THREE.Vector3(1, 0, 0);
     this.speed = 0.2;
-    this.lifespan = 23000;
+    this.lifespan = 21000;
     this.createdAt = Date.now();
     this.mesh = null;
     this.collider = null;
     this.colliderMesh = null; // Add property for collider visualization
     this.isDestroyed = false; // Flag to indicate whether destroy() has been called
     this.modelName = this.selectRandomModel(type);
+    this.arrowMesh = null; // Arrow mesh for highlighting
 
     // Collision state
     this.isCollidingWithPlayer = false;
@@ -182,6 +183,13 @@ class Trash {
           this.position.clone().sub(size.clone().multiplyScalar(0.5)),
           this.position.clone().add(size.clone().multiplyScalar(0.5))
         );
+
+        // Add arrow mesh as a child (but hidden by default)
+        this.arrowMesh = this.createArrowMesh();
+        if (this.mesh && this.arrowMesh) {
+          this.mesh.add(this.arrowMesh);
+        }
+
         return;
       }
     }
@@ -262,6 +270,27 @@ class Trash {
       mesh: this.mesh,
       material: material
     });
+
+    // Add arrow mesh as a child (but hidden by default)
+    this.arrowMesh = this.createArrowMesh();
+    if (this.mesh && this.arrowMesh) {
+      this.mesh.add(this.arrowMesh);
+    }
+  }
+
+  createArrowMesh() {
+    // Create a simple down-facing pyramid as the arrow
+    const pyramidGeometry = new THREE.ConeGeometry(0.2, 0.3, 4);
+    const pyramidMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
+    const pyramid = new THREE.Mesh(pyramidGeometry, pyramidMaterial);
+    pyramid.rotation.y = Math.PI / 4; // Align base to square
+    pyramid.rotation.x = Math.PI; // Point downwards
+    pyramid.position.y = 2;
+    pyramid.scale.set(10, 10, 10);
+    const arrowGroup = new THREE.Group();
+    arrowGroup.add(pyramid);
+    arrowGroup.visible = false;
+    return arrowGroup;
   }
 
   createCollider() {
@@ -365,6 +394,19 @@ class Trash {
       
       // Update the scale of the collider mesh
       this.colliderMesh.scale.set(currentScale, currentScale, currentScale);
+    }
+
+    // Arrow highlight logic
+    if (this.arrowMesh) {
+      if (this.isCollidingWithPlayer) {
+        this.arrowMesh.visible = true;
+        // Position arrow above the mesh (account for scale)
+        this.arrowMesh.position.set(0, 20, 0);
+        // Optional: animate arrow (e.g., bobbing)
+        this.arrowMesh.position.y += Math.sin(Date.now() * 0.005) * 0.1;
+      } else {
+        this.arrowMesh.visible = false;
+      }
     }
 
     // Check if trash should be destroyed (after lifespan)
@@ -483,6 +525,12 @@ class Trash {
       if (this.colliderMesh.geometry) this.colliderMesh.geometry.dispose();
       if (this.colliderMesh.material) this.colliderMesh.material.dispose();
       this.colliderMesh = null;
+    }
+
+    // Remove arrow mesh if present
+    if (this.arrowMesh && this.mesh) {
+      this.mesh.remove(this.arrowMesh);
+      this.arrowMesh = null;
     }
 
     this.collider = null;
