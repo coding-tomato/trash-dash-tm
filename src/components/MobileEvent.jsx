@@ -30,11 +30,7 @@ const MobileEvent = () => {
     
     // Hide overlay on space or any arrow key
     if (
-      event.code === "Space" || 
-      event.code === "ArrowUp" || 
-      event.code === "ArrowDown" || 
-      event.code === "ArrowLeft" || 
-      event.code === "ArrowRight"
+      event.code === "Space"
     ) {
       setAnimating(false);
       setShowOverlay(false);
@@ -134,7 +130,7 @@ const MobileEvent = () => {
             textAlign: "center",
           }}
         >
-          Presiona espacio o flechas para esconder
+          Presiona espacio o click para esconder
         </p>
         <img
           src={`${phoneImages[currentImage]}`}
