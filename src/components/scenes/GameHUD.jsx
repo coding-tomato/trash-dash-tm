@@ -304,6 +304,7 @@ const GameHUD = () => {
           display: "flex",
           alignItems: "center",
           gap: "20px",
+          zIndex: 10,
         }}
       >
         <img style={{ imageRendering: "pixelated" }} src={"trash.png"} />
@@ -327,6 +328,7 @@ const GameHUD = () => {
           border: "4px solid #c2d97d",
           cursor: "pointer",
           transition: "all 0.3s ease",
+          zIndex: 10,
         }}
         onClick={() => setShowCombinations(!showCombinations)}
         title={
@@ -416,6 +418,7 @@ const GameHUD = () => {
           borderRadius: "5px",
           textAlign: "center",
           fontSize: "16px",
+          zIndex: 10,
         }}
       >
         <img
@@ -542,6 +545,7 @@ const GameHUD = () => {
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
+            zIndex: 10,
           }}
         >
           <div

@@ -28,7 +28,8 @@ const GameContainer = () => {
         height: '100%',
         minHeight: '500px', 
         backgroundColor: '#000',
-        position: 'relative'
+        position: 'relative',
+        zIndex: 1 // Set a lower z-index to ensure it's below UI but not capturing events
       }}
     />
   );

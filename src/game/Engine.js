@@ -46,12 +46,6 @@ class Game {
     this.keyCombo = [];
   }
 
-  setPlayerCharacter(index) {
-    if (this.player) {
-      this.player.setCharacter(index);
-    }
-  }
-
   init() {
     if (this.isInitialized) return;
 
@@ -94,6 +88,11 @@ class Game {
     this.camera.add(this.audioListener);
     this.loadSounds();
 
+    window.addEventListener("resize", this.handleResize.bind(this));
+    
+    // Set initialized flag early so other methods like handleResize will work
+    this.isInitialized = true;
+
     // Start pre-loading assets
     this.preloadAssets().then(() => {
       this.setupGameObjects();
@@ -101,9 +100,6 @@ class Game {
         this.animate();
       });
     });
-
-    window.addEventListener("resize", this.handleResize.bind(this));
-    this.isInitialized = true;
   }
 
   // Start intro camera animation
@@ -187,21 +183,20 @@ class Game {
     }
   }
 
-  preloadAssets() {
+  async preloadAssets() {
     // Show loading status
     this.emitEvent("loadingAssets", { loading: true });
 
-    return assetLoader
-      .preloadAssets()
-      .then(() => {
-        this.assetsLoaded = true;
-        this.setupAudio();
-        this.emitEvent("loadingAssets", { loading: false });
-      })
-      .catch((error) => {
-        console.error("Error loading assets:", error);
-        this.emitEvent("loadingAssets", { loading: false, error: true });
-      });
+    try {
+      await assetLoader
+        .preloadAssets();
+      this.assetsLoaded = true;
+      this.setupAudio();
+      this.emitEvent("loadingAssets", { loading: false });
+    } catch (error) {
+      console.error("Error loading assets:", error);
+      this.emitEvent("loadingAssets", { loading: false, error: true });
+    }
   }
 
   // Set up audio with loaded buffers from AssetLoader
@@ -281,8 +276,10 @@ class Game {
     const delta = now - (this.lastUpdate || now);
     this.lastUpdate = now;
 
-    // Update orbit controls (for damping) if they exist
+    // Update orbit controls (for damping) if they exist and controls are enabled
     if (this.controls && CONFIG.DEBUG) {
+      // Make sure controlsEnabled is true even when not used elsewhere
+      this.controlsEnabled = true;
       this.controls.update();
     }
 
@@ -297,6 +294,12 @@ class Game {
     }
 
     this.renderer.render(this.scene, this.camera);
+  }
+
+  setPlayerCharacter(index) {
+    if (this.player) {
+      this.player.setCharacter(index);
+    }
   }
 
   processInput() {
@@ -364,6 +367,11 @@ class Game {
 
     // Disable controls while paused
     this.controlsEnabled = false;
+    
+    // Also disable the OrbitControls themselves if they exist
+    if (this.controls && CONFIG.DEBUG) {
+      this.controls.enabled = false;
+    }
 
     // Pause background music
     this.pauseMusic();
@@ -391,6 +399,11 @@ class Game {
 
     this.controlsEnabled = true;
     this.lastUpdate = Date.now(); // Reset last update time
+
+    // Make sure OrbitControls are enabled if they exist
+    if (this.controls && CONFIG.DEBUG) {
+      this.controls.enabled = true;
+    }
 
     // Resume background music
     this.playMusic();

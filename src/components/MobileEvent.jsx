@@ -6,76 +6,57 @@ const phoneImages = ["phone1.png", "phone2.png", "phone3.png", "phone4.png"];
 const MobileEvent = () => {
   const gameEngine = useGameContext();
   const [currentImage, setCurrentImage] = useState(0);
-  const [animating, setAnimating] = useState(false);
   const [showOverlay, setShowOverlay] = useState(false);
-  const prevSceneRef = useRef(null); // Track previous scene
-
-  // Helper to start the mobile event (show once, random image)
-  const startMobileEvent = () => {
-    const randomIdx = Math.floor(Math.random() * phoneImages.length);
-    setCurrentImage(randomIdx);
-    setShowOverlay(true);
-    setAnimating(true);
-  };
-
-  // Helper to stop the mobile event
-  const stopMobileEvent = () => {
-    setShowOverlay(false);
-    setAnimating(false);
-  };
-
-  // Handle keyboard events (space or arrow keys)
-  const handleKeyDown = (event) => {
-    if (!animating) return;
-    
-    // Hide overlay on space or any arrow key
-    if (
-      event.code === "Space"
-    ) {
-      setAnimating(false);
-      setShowOverlay(false);
-    }
-  };
+  const prevSceneRef = useRef(null);
 
   useEffect(() => {
     if (!gameEngine) return;
-    // Listen for game start/stop events
+
+    const handleKeyDown = (event) => {
+      if (event.code === "Space") {
+        setShowOverlay(false);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+
     const handleStateChange = (newState) => {
       const prevScene = prevSceneRef.current;
       const nextScene = newState.currentScene;
       if (nextScene === "GAME" && prevScene !== "GAME") {
-        startMobileEvent();
+        showMobilePhone();
       } else if (nextScene !== "GAME" && prevScene === "GAME") {
-        stopMobileEvent();
+        hideMobilePhone();
       }
       prevSceneRef.current = nextScene;
     };
     gameEngine.addEventListener("stateChange", handleStateChange);
+
     if (
       gameEngine.getGameState &&
       gameEngine.getGameState().currentScene === "GAME"
     ) {
       prevSceneRef.current = "GAME";
-      startMobileEvent();
+      showMobilePhone();
     } else if (gameEngine.getGameState) {
       prevSceneRef.current = gameEngine.getGameState().currentScene;
     }
+
     return () => {
       gameEngine.removeEventListener("stateChange", handleStateChange);
-      stopMobileEvent();
+      window.removeEventListener("keydown", handleKeyDown);
+      hideMobilePhone();
     };
   }, [gameEngine]);
 
-  // Add and remove keyboard event listener
-  useEffect(() => {
-    if (animating) {
-      window.addEventListener("keydown", handleKeyDown);
-    }
-    
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [animating]);
+  const showMobilePhone = () => {
+    const randomIdx = Math.floor(Math.random() * phoneImages.length);
+    setCurrentImage(randomIdx);
+    setShowOverlay(true);
+  };
+
+  const hideMobilePhone = () => {
+    setShowOverlay(false);
+  };
 
   return (
     <div
@@ -94,10 +75,7 @@ const MobileEvent = () => {
         transition: "background 0.5s",
       }}
       onClick={() => {
-        if (animating) {
-          setAnimating(false);
-          setShowOverlay(false);
-        }
+        setShowOverlay(false);
       }}
     >
       <div
@@ -117,14 +95,14 @@ const MobileEvent = () => {
         style={{
           display: "flex",
           flexDirection: "column",
-          transform: animating ? "translateY(0)" : "translateY(120%)",
+          transform: showOverlay ? "translateY(0)" : "translateY(120%)",
           transition: "transform 0.5s ease-in-out",
         }}
       >
         <p
           style={{
             color: "white",
-            opacity: animating ? 1 : 0,
+            opacity: showOverlay ? 1 : 0,
             zIndex: 1001,
             width: "100%",
             textAlign: "center",
