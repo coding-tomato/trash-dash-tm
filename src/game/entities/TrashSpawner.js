@@ -2,7 +2,7 @@ import * as THREE from "three";
 import Trash from "./Trash";
 
 class TrashSpawner {
-  constructor(scene, spawnArea = { width: 40, depth: 40, height: 20 }) {
+  constructor(scene, spawnSound) {
     this.scene = scene;
     this.trashItems = [];
     this.trashTypes = [
@@ -12,8 +12,8 @@ class TrashSpawner {
       "paper",
       "nonRecyclable",
     ];
+    this.spawnSound = spawnSound;
     this.lastSpawnTime = 0;
-    this.spawnArea = spawnArea;
     this.activeCollisionIndex = null;
     this.spawnSpeedupTimer = 0;
     this.spawnInterval = 4000; // Start at 4s
@@ -30,7 +30,10 @@ class TrashSpawner {
     if (!this.spawnSpeedupTimer) this.spawnSpeedupTimer = currentTime;
     if (currentTime - this.spawnSpeedupTimer > this.spawnSpeedupPeriod) {
       this.spawnSpeedupTimer = currentTime;
-      this.spawnInterval = Math.max(this.spawnIntervalMin, this.spawnInterval - this.spawnIntervalDecrement);
+      this.spawnInterval = Math.max(
+        this.spawnIntervalMin,
+        this.spawnInterval - this.spawnIntervalDecrement
+      );
     }
 
     if (currentTime - this.lastSpawnTime > this.spawnInterval) {
@@ -68,9 +71,9 @@ class TrashSpawner {
       // Keep items that are still valid and have not exceeded their lifespan
       // Also check if the trash item has been marked for deletion
       return (
-        trash && 
-        trash.mesh !== null && 
-        Date.now() - trash.createdAt < trash.lifespan && 
+        trash &&
+        trash.mesh !== null &&
+        Date.now() - trash.createdAt < trash.lifespan &&
         !trash.isDestroyed
       );
     });
@@ -95,10 +98,15 @@ class TrashSpawner {
 
     const newTrash = new Trash(this.scene, randomType, position);
     this.trashItems.push(newTrash);
-    
-    // Trigger the onSpawn callback if it exists
-    if (typeof this.onSpawn === 'function') {
-      this.onSpawn(randomType);
+
+    if (this.spawnSound) {
+      if (this.spawnSound.isPlaying) {
+        this.spawnSound.stop();
+      }
+      this.spawnSound.play();
+    }
+    else {
+      console.warn("Spawn sound not set or not available.");
     }
   }
 

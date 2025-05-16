@@ -86,10 +86,9 @@ class Game {
     // Initialize audio
     this.audioListener = new THREE.AudioListener();
     this.camera.add(this.audioListener);
-    this.loadSounds();
 
     window.addEventListener("resize", this.handleResize.bind(this));
-    
+
     // Set initialized flag early so other methods like handleResize will work
     this.isInitialized = true;
 
@@ -154,25 +153,6 @@ class Game {
     });
   }
 
-  // Add method to load sounds
-  loadSounds() {
-    // Set up music (will be loaded by AssetLoader)
-    this.sounds.music = new THREE.Audio(this.audioListener);
-    this.sounds.music.setLoop(true);
-    this.sounds.music.setVolume(0.3);
-
-    // Set up sound effects (will be loaded by AssetLoader)
-    this.sounds.good = new THREE.Audio(this.audioListener);
-    this.sounds.good.setVolume(0.5);
-
-    this.sounds.bad = new THREE.Audio(this.audioListener);
-    this.sounds.bad.setVolume(0.5);
-
-    this.sounds.spawn = new THREE.Audio(this.audioListener);
-    this.sounds.spawn.setVolume(0.4);
-  }
-
-  // Play a sound effect
   playSound(soundName) {
     const sound = this.sounds[soundName];
     if (sound && sound.buffer) {
@@ -184,14 +164,12 @@ class Game {
   }
 
   async preloadAssets() {
-    // Show loading status
     this.emitEvent("loadingAssets", { loading: true });
 
     try {
-      await assetLoader
-        .preloadAssets();
+      await assetLoader.preloadAssets();
       this.assetsLoaded = true;
-      this.setupAudio();
+      this.loadAndSetupAudio();
       this.emitEvent("loadingAssets", { loading: false });
     } catch (error) {
       console.error("Error loading assets:", error);
@@ -199,35 +177,34 @@ class Game {
     }
   }
 
-  // Set up audio with loaded buffers from AssetLoader
-  setupAudio() {
-    if (assetLoader.isLoaded) {
-      // Set up music
-      const musicBuffer = assetLoader.getAudio("music");
-      if (musicBuffer) {
-        this.sounds.music.setBuffer(musicBuffer);
-      }
+  loadAndSetupAudio() {
+    // Create audio objects with their settings
+    // and setup their buffers from AssetLoader
+    try {
+      if (assetLoader.isLoaded) {
+        // Music
+        this.sounds.music = new THREE.Audio(this.audioListener);
+        this.sounds.music.setLoop(true);
+        this.sounds.music.setVolume(0.3);
+        this.sounds.music.setBuffer(assetLoader.getAudio("music"));
+        this.sounds.music.play();
 
-      // Set up sound effects
-      const goodBuffer = assetLoader.getAudio("goodSound");
-      if (goodBuffer) {
-        this.sounds.good.setBuffer(goodBuffer);
-      }
+        // SFX
+        this.sounds.good = new THREE.Audio(this.audioListener);
+        this.sounds.good.setVolume(0.5);
+        this.sounds.good.setBuffer(assetLoader.getAudio("goodSound"));
 
-      const badBuffer = assetLoader.getAudio("badSound");
-      if (badBuffer) {
-        this.sounds.bad.setBuffer(badBuffer);
-      }
+        this.sounds.bad = new THREE.Audio(this.audioListener);
+        this.sounds.bad.setVolume(0.5);
+        this.sounds.bad.setBuffer(assetLoader.getAudio("badSound"));
 
-      const spawnBuffer = assetLoader.getAudio("spawn");
-      if (spawnBuffer) {
+        const spawnBuffer = assetLoader.getAudio("spawn");
+        this.sounds.spawn = new THREE.Audio(this.audioListener);
+        this.sounds.spawn.setVolume(0.4);
         this.sounds.spawn.setBuffer(spawnBuffer);
       }
-
-      // Start playing background music
-      if (this.sounds.music.buffer) {
-        this.sounds.music.play();
-      }
+    } catch (error) {
+      console.error("Error setting up audio: ", error);
     }
   }
 
@@ -242,15 +219,7 @@ class Game {
 
     this.scenario = new Scenario(this.scene);
 
-    this.trashSpawner = new TrashSpawner(this.scene, {
-      width: 30,
-      depth: 30,
-      height: 15,
-    });
-    // Set up spawn sound callback
-    this.trashSpawner.onSpawn = (trashType) => {
-      this.playSound("spawn");
-    };
+    this.trashSpawner = new TrashSpawner(this.scene, this.sounds.spawn);
     this.gameObjects.push({
       id: "trashSpawner",
       type: "environment",
@@ -367,7 +336,7 @@ class Game {
 
     // Disable controls while paused
     this.controlsEnabled = false;
-    
+
     // Also disable the OrbitControls themselves if they exist
     if (this.controls && CONFIG.DEBUG) {
       this.controls.enabled = false;
@@ -641,15 +610,7 @@ class Game {
     // Clear all trash items
     if (this.trashSpawner) {
       this.trashSpawner.destroy();
-      this.trashSpawner = new TrashSpawner(this.scene, {
-        width: 30,
-        depth: 30,
-        height: 15,
-      });
-      // Reset spawn sound callback
-      this.trashSpawner.onSpawn = (trashType) => {
-        this.playSound("spawn");
-      };
+      this.trashSpawner = new TrashSpawner(this.scene, this.sounds.spawn);
 
       // Update the trashSpawner reference in gameObjects
       const trashIndex = this.gameObjects.findIndex(

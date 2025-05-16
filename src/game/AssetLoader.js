@@ -113,9 +113,7 @@ class AssetLoader {
             this.audio[key] = buffer;
             resolve(buffer);
           },
-          // Progress callback
           undefined,
-          // Error callback
           (error) => {
             console.error(`Error loading audio: ${path}`, error);
             reject(error);
