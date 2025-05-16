@@ -92,6 +92,12 @@ class Game {
     // Set initialized flag early so other methods like handleResize will work
     this.isInitialized = true;
 
+    this.input = new Input({
+      onPause: () => this.handlePauseRequest(),
+      onKeyCombo: (combo) => this.handleKeyCombo(combo),
+    });
+    this.input.attach();
+
     // Start pre-loading assets
     this.preloadAssets().then(() => {
       this.setupGameObjects();
@@ -226,15 +232,6 @@ class Game {
       object: this.trashSpawner,
       update: (delta) => this.trashSpawner.update(delta),
     });
-
-    this.input = new Input({
-      onPause: () => {
-        // Directly handle pause/resume toggle when Escape key is pressed
-        this.handlePauseRequest();
-      },
-      onKeyCombo: (combo) => this.handleKeyCombo(combo),
-    });
-    this.input.attach();
   }
 
   animate() {
@@ -270,16 +267,16 @@ class Game {
     }
   }
 
-
   setCurrentScene(scene) {
     if (!this.isInitialized) return;
     this.stats.setCurrentScene(scene);
+    this.input.setEnabled(scene === CONFIG.SCENES.GAME);
     this.updateReactState();
   }
 
-  // Add a method to handle pause requests that can toggle between pause/resume
   handlePauseRequest() {
     if (!this.isInitialized) return;
+    if (this.stats.currentScene !== CONFIG.SCENES.GAME) return;
 
     // If currently playing, pause the game. Otherwise, resume it.
     if (this.animationId) {

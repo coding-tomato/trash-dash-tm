@@ -13,7 +13,7 @@ const MobileEvent = () => {
     if (!gameEngine) return;
 
     const handleKeyDown = (event) => {
-      if (event.code === "Space") {
+      if (event.code === "Space" || event.code === "Escape") {
         setShowOverlay(false);
       }
     };
@@ -55,7 +55,7 @@ const MobileEvent = () => {
   };
 
   const hideMobilePhone = () => {
-    gameEngine.handlePauseRequest();
+    gameEngine.resume();
     setShowOverlay(false);
   };
 
@@ -75,9 +75,7 @@ const MobileEvent = () => {
         justifyContent: "flex-start",
         transition: "background 0.5s",
       }}
-      onClick={() => {
-        setShowOverlay(false);
-      }}
+      onClick={() => hideMobilePhone()}
     >
       <div
         style={{
