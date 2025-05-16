@@ -84,13 +84,6 @@ const GameHUD = () => {
       }));
     };
 
-    const handleLevelUp = (newLevel) => {
-      setGameStats((prevStats) => ({
-        ...prevStats,
-        level: newLevel,
-      }));
-    };
-
     // New event listener for key combinations
     const handleKeyCombo = (combo) => {
       setCurrentKeyCombo(combo);
@@ -131,7 +124,6 @@ const GameHUD = () => {
     gameEngine.addEventListener("stateChange", handleStateChange);
     gameEngine.addEventListener("collision", handleCollision);
     gameEngine.addEventListener("trashDisposed", handleTrashDisposed);
-    gameEngine.addEventListener("levelUp", handleLevelUp);
     gameEngine.addEventListener("keyCombo", handleKeyCombo); // Add listener for key combinations
     gameEngine.addEventListener("gamePaused", handleGamePaused);
     gameEngine.addEventListener("gameResumed", handleGameResumed);
@@ -152,8 +144,7 @@ const GameHUD = () => {
       gameEngine.removeEventListener("stateChange", handleStateChange);
       gameEngine.removeEventListener("collision", handleCollision);
       gameEngine.removeEventListener("trashDisposed", handleTrashDisposed);
-      gameEngine.removeEventListener("levelUp", handleLevelUp);
-      gameEngine.removeEventListener("keyCombo", handleKeyCombo); // Remove listener for key combinations
+      gameEngine.removeEventListener("keyCombo", handleKeyCombo);
       gameEngine.removeEventListener("gamePaused", handleGamePaused);
       gameEngine.removeEventListener("gameResumed", handleGameResumed);
     };

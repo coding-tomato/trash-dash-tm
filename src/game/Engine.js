@@ -238,23 +238,22 @@ class Game {
   }
 
   animate() {
+    if (!this.stats.isPlaying) return;
+
     this.animationId = requestAnimationFrame(this.animate.bind(this));
 
-    // Calculate delta time
     const now = Date.now();
     const delta = now - (this.lastUpdate || now);
     this.lastUpdate = now;
 
-    // Update orbit controls (for damping) if they exist and controls are enabled
     if (this.controls && CONFIG.DEBUG) {
-      // Make sure controlsEnabled is true even when not used elsewhere
       this.controlsEnabled = true;
       this.controls.update();
     }
 
     this.gameObjects.forEach((obj) => {
       if (obj.update) {
-        obj.update(delta / 1000); // Convert to seconds
+        obj.update(delta / 1000);
       }
     });
 
@@ -271,13 +270,6 @@ class Game {
     }
   }
 
-  processInput() {
-    // This method is kept for future input handling not related to camera movement
-    if (!this.controlsEnabled || !this.input) return;
-
-    const keys = this.input.getState();
-    // You can still use this for non-movement related inputs
-  }
 
   setCurrentScene(scene) {
     if (!this.isInitialized) return;
@@ -343,7 +335,7 @@ class Game {
     }
 
     // Pause background music
-    this.pauseMusic();
+    this.pauseBackgroundMusic();
 
     // Update game state
     this.stats.setPlaying(false);
@@ -357,7 +349,6 @@ class Game {
   }
 
   resume() {
-    // First check conditions for validity
     if (!this.isInitialized) {
       return;
     }
@@ -375,7 +366,7 @@ class Game {
     }
 
     // Resume background music
-    this.playMusic();
+    this.playBackgroundMusic();
 
     // Update game state
     this.stats.setPlaying(true);
@@ -448,8 +439,7 @@ class Game {
       }
     });
 
-    // Explicitly ensure background music is stopped
-    this.stopMusic();
+    this.stopBackgroundMusic();
 
     // Stop animation loop
     if (this.animationId) {
@@ -580,32 +570,8 @@ class Game {
     }
   }
 
-  setCollisionsEnabled(enabled) {
-    this.collisionsEnabled = enabled;
-  }
-
   resetGame() {
     if (!this.isInitialized) return;
-
-    // Reset player position and score
-    if (this.player) {
-      // Destroy and recreate the player to reset its state
-      this.player.destroy(this.scene);
-      this.player = new Player(this.scene);
-
-      // Update the player reference in gameObjects
-      const playerIndex = this.gameObjects.findIndex(
-        (obj) => obj.id === "player"
-      );
-      if (playerIndex !== -1) {
-        this.gameObjects[playerIndex] = {
-          id: "player",
-          type: "player",
-          object: this.player,
-          update: (delta) => this.player.update(delta), // Add the update function for the player
-        };
-      }
-    }
 
     // Clear all trash items
     if (this.trashSpawner) {
@@ -635,10 +601,7 @@ class Game {
       this.emitEvent("keyCombo", []); // Emit empty key combo to update the UI
     }
 
-    // Notify about game reset
     this.emitEvent("gameReset", this.stats.getState());
-
-    // Pause the game
     this.pause();
     this.clearGameTimer();
   }
@@ -659,7 +622,7 @@ class Game {
   }
 
   // Play background music
-  playMusic() {
+  playBackgroundMusic() {
     if (
       this.sounds.music &&
       this.sounds.music.buffer &&
@@ -669,15 +632,13 @@ class Game {
     }
   }
 
-  // Pause background music
-  pauseMusic() {
+  pauseBackgroundMusic() {
     if (this.sounds.music && this.sounds.music.isPlaying) {
       this.sounds.music.pause();
     }
   }
 
-  // Stop background music
-  stopMusic() {
+  stopBackgroundMusic() {
     if (this.sounds.music && this.sounds.music.isPlaying) {
       this.sounds.music.stop();
     }

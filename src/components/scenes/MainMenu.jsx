@@ -29,14 +29,6 @@ const MainMenu = () => {
 
     setLoading(true);
 
-    // Initialize the game engine if not already initialized
-    if (!gameEngine.isInitialized) {
-      gameEngine.init();
-    }
-
-    gameEngine.resetGame();
-    gameEngine.resume();
-
     gameEngine.setPlayerCharacter(selectedCharacter);
     gameEngine.setCurrentScene(CONFIG.SCENES.GAME);
     gameEngine.startIntroAnimation();
@@ -44,10 +36,10 @@ const MainMenu = () => {
     setLoading(false);
   };
 
-  // Show tutorial first, then start game
   const handleMenuStart = () => {
     setShowTutorial(true);
   };
+
   const handleContinueFromTutorial = () => {
     setShowTutorial(false);
     handleStartGame();

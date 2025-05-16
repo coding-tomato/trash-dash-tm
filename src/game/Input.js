@@ -1,5 +1,5 @@
 class Input {
-  constructor({ onFire, onPause, onKeyCombo = null, enabled = true } = {}) {
+  constructor({ onPause, onKeyCombo = null, enabled = true } = {}) {
     this.enabled = enabled;
     this.keys = {
       arrowUp: false,
@@ -7,12 +7,11 @@ class Input {
       arrowLeft: false,
       arrowRight: false
     };
-    // Recently pressed keys for combinations
+
     this.recentKeys = [];
-    this.keyTimeout = 1000; // Time in ms to consider keys part of the same combination
+    this.keyTimeout = 1000; 
     this.lastKeyTime = 0;
     
-    // We no longer need onMove handler since movement is handled by OrbitControls
     this.handlers = { onPause, onKeyCombo };
     this._bindHandlers();
   }
@@ -26,7 +25,6 @@ class Input {
       switch (e.key) {
         case "Escape":
           if (this.handlers.onPause) this.handlers.onPause();
-          this.resetCombo();
           break;
         case " ": // For older browsers
           e.preventDefault();

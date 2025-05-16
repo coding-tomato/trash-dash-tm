@@ -55,6 +55,7 @@ const MobileEvent = () => {
   };
 
   const hideMobilePhone = () => {
+    gameEngine.handlePauseRequest();
     setShowOverlay(false);
   };
 
