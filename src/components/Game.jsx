@@ -14,8 +14,8 @@ const Game = () => {
         overflow: 'hidden'
       }}>
         <MobileEvent />
-        <GameContainer />
         <GameUI />
+        <GameContainer />
       </div>
     </GameProvider>
   );

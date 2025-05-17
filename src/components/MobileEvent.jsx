@@ -82,19 +82,6 @@ const MobileEvent = () => {
     >
       <div
         style={{
-          position: "absolute",
-          top: 0,
-          left: 0,
-          width: "100vw",
-          height: "100vh",
-          background: "rgba(0,0,0,0.7)",
-          opacity: showOverlay ? 1 : 0,
-          transition: "opacity 0.5s",
-          pointerEvents: "none",
-        }}
-      />
-      <div
-        style={{
           display: "flex",
           flexDirection: "column",
           transform: showOverlay ? "translateY(0)" : "translateY(120%)",

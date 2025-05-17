@@ -492,7 +492,8 @@ const GameUI = () => {
               left: 0,
               width: "100%",
               height: "100%",
-              backgroundColor: "rgba(0, 0, 0, 0.7)",
+              backgroundColor: "rgba(0, 0, 0, 0.4)",
+              color: "rgba(255, 255, 255, 0.5)",
               display: "flex",
               flexDirection: "column",
               justifyContent: "center",
@@ -502,7 +503,6 @@ const GameUI = () => {
           >
             <div
               style={{
-                color: "white",
                 fontSize: "32px",
                 fontWeight: "bold",
                 marginBottom: "20px",

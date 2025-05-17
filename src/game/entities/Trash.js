@@ -5,21 +5,21 @@ import { CONFIG } from "../../config";
 class Trash {
   constructor(scene, type, position, onExpire) {
     this.scene = scene;
+    this.createdAt = Date.now();
     this.type = type; // 'glass', 'metal_and_plastic', 'paper', or 'organic'
-    this.selectedTrash = null;
+
     this.position = position;
     this.velocity = new THREE.Vector3(1, 0, 0);
     this.speed = 0.2;
     this.lifespan = 21000;
-    this.createdAt = Date.now();
-    this.mesh = null;
     this.isDestroyed = false; 
+    this.onExpire = onExpire;
+    this.isActive = false;
+
+    // Model
+    this.mesh = null;
     this.modelName = this.selectRandomModel(type);
     this.highlightArrowMesh = null;
-    this.onExpire = onExpire;
-
-    // Active trash state
-    this.isActive = false;
 
     // Glow effect properties
     this.glowIntensity = 0;
