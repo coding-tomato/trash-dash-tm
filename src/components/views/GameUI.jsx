@@ -319,7 +319,7 @@ const GameUI = () => {
           border: "4px solid #c2d97d",
           cursor: "pointer",
           transition: "all 0.3s ease",
-          zIndex: 10,
+          zIndex: 1000,
         }}
         onClick={() => setShowCombinations(!showCombinations)}
         title={

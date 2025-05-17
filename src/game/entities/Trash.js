@@ -24,7 +24,7 @@ class Trash {
     this.maxCollisionDistance = 5; // Maximum distance to player to maintain collision
     this.lastCollisionCheck = Date.now(); // Add a timestamp to track collisions
     this.collisionTimeout = 15000;
-    
+
     // Glow effect properties
     this.glowIntensity = 0;
     this.maxGlowIntensity = 1.0; // Increased intensity for internal glow only
@@ -34,7 +34,7 @@ class Trash {
 
     // Define key combinations required for disposal based on trash type
     this.requiredCombination = this.getRequiredCombination();
-    
+
     // Animation properties for spawning
     this.isSpawning = true;
     this.spawnDuration = 1000; // 1 second for the spawn animation
@@ -43,7 +43,7 @@ class Trash {
 
     this.createMesh();
     this.createCollider();
-    
+
     // Apply initial scale for spawn animation
     if (this.mesh) {
       this.mesh.scale.set(this.spawnScale, this.spawnScale, this.spawnScale);
@@ -97,7 +97,6 @@ class Trash {
   }
 
   createMesh() {
-    // If assetLoader has our models, use them
     if (assetLoader.isLoaded) {
       const fbx = assetLoader.getModel(this.modelName);
       if (fbx) {
@@ -105,7 +104,7 @@ class Trash {
         fbx.traverse((child) => {
           if (child.isMesh) {
             let material;
-            
+
             switch (this.type) {
               case "glass":
                 material = new THREE.MeshPhysicalMaterial({
@@ -117,7 +116,7 @@ class Trash {
                   transmission: 0.5,
                   clearcoat: 1.0,
                   emissive: 0x98b253,
-                  emissiveIntensity: 0
+                  emissiveIntensity: 0,
                 });
                 break;
               case "metal_and_plastic":
@@ -128,7 +127,7 @@ class Trash {
                   roughness: 0.5,
                   metalness: 0.8,
                   emissive: 0xffff00,
-                  emissiveIntensity: 0
+                  emissiveIntensity: 0,
                 });
                 break;
               case "organic":
@@ -137,16 +136,16 @@ class Trash {
                   roughness: 0.8,
                   metalness: 0.0,
                   emissive: 0x8b4513,
-                  emissiveIntensity: 0
+                  emissiveIntensity: 0,
                 });
                 break;
               case "paper":
                 material = new THREE.MeshStandardMaterial({
-                  color: 0x0A70DF, // Blue
+                  color: 0x0a70df, // Blue
                   roughness: 0.5,
                   metalness: 0.0,
                   emissive: 0x0000ff,
-                  emissiveIntensity: 0
+                  emissiveIntensity: 0,
                 });
                 break;
               case "nonRecyclable":
@@ -155,17 +154,17 @@ class Trash {
                   roughness: 0.5,
                   metalness: 0.1,
                   emissive: 0xff0000,
-                  emissiveIntensity: 0
+                  emissiveIntensity: 0,
                 });
                 break;
             }
-            
+
             // Store the original material
             this.originalMaterials.push({
               mesh: child,
-              material: material
+              material: material,
             });
-            
+
             child.material = material;
             child.castShadow = true;
             child.receiveShadow = true;
@@ -193,89 +192,6 @@ class Trash {
         return;
       }
     }
-
-    // Fallback if model loading fails: use basic geometry
-    let geometry;
-    let material;
-
-    switch (this.type) {
-      case "glass":
-        geometry = new THREE.ConeGeometry(1, 2, 4);
-        material = new THREE.MeshPhysicalMaterial({
-          color: 0x88ccff,
-          transparent: true,
-          opacity: 0.8,
-          roughness: 0.1,
-          metalness: 0,
-          transmission: 0.5,
-          emissive: 0x88ccff,
-          emissiveIntensity: 0
-        });
-        break;
-      case "metal_and_plastic":
-        geometry = new THREE.SphereGeometry(1, 16, 16);
-        material = new THREE.MeshStandardMaterial({
-          color: 0xffcc99,
-          transparent: true,
-          opacity: 0.9,
-          roughness: 0.5,
-          emissive: 0xffcc99,
-          emissiveIntensity: 0
-        });
-        break;
-      case "organic":
-        geometry = new THREE.TorusGeometry(0.8, 0.4, 16, 32);
-        material = new THREE.MeshStandardMaterial({
-          color: 0x99cc66,
-          roughness: 0.8,
-          emissive: 0x99cc66,
-          emissiveIntensity: 0
-        });
-        break;
-      case "paper":
-        geometry = new THREE.BoxGeometry(1.5, 0.2, 1.5);
-        material = new THREE.MeshStandardMaterial({
-          color: 0xA07FDF,
-          roughness: 0.8,
-          emissive: 0x0074D9,
-          emissiveIntensity: 0
-        });
-        break;
-      case "nonRecyclable":
-        geometry = new THREE.CylinderGeometry(1, 1, 2, 32);
-        material = new THREE.MeshStandardMaterial({
-          color: 0xff0000,
-          roughness: 0.5,
-          emissive: 0xff0000,
-          emissiveIntensity: 0
-        });
-        break;
-      default:
-        geometry = new THREE.SphereGeometry(1, 16, 16);
-        material = new THREE.MeshStandardMaterial({
-          color: 0xffffff,
-          emissive: 0xffffff,
-          emissiveIntensity: 0
-        });
-    }
-
-    this.mesh = new THREE.Mesh(geometry, material);
-    this.mesh.position.copy(this.position);
-    this.mesh.castShadow = true;
-    this.mesh.receiveShadow = true;
-    this.scene.add(this.mesh);
-    
-    // Store the original material for fallback geometry
-    this.originalMaterials.push({
-      mesh: this.mesh,
-      material: material
-    });
-
-    // Add arrow mesh as a child (but hidden by default)
-    this.arrowMesh = this.createArrowMesh();
-    if (this.mesh && this.arrowMesh) {
-      this.mesh.add(this.arrowMesh);
-    }
   }
 
   createArrowMesh() {
@@ -297,7 +213,7 @@ class Trash {
     // Initial size (will be scaled during the spawning animation)
     const size = new THREE.Vector3(2, 2, 2);
     const center = this.position.clone();
-    
+
     // Create collider with initial size
     const initialSize = size.clone().multiplyScalar(this.spawnScale);
     this.collider = new THREE.Box3(
@@ -316,7 +232,11 @@ class Trash {
     this.colliderMesh = new THREE.Mesh(boxGeometry, wireframeMaterial);
     this.colliderMesh.position.copy(center);
     // Apply initial scale
-    this.colliderMesh.scale.set(this.spawnScale, this.spawnScale, this.spawnScale);
+    this.colliderMesh.scale.set(
+      this.spawnScale,
+      this.spawnScale,
+      this.spawnScale
+    );
     this.colliderMesh.visible = CONFIG.DEBUG; // Only show in debug mode
     this.scene.add(this.colliderMesh);
   }
@@ -324,19 +244,20 @@ class Trash {
   update(deltaTime) {
     // Handle spawn animation
     let currentScale = this.targetScale;
-    
+
     if (this.isSpawning) {
       const elapsedTime = Date.now() - this.createdAt;
       const progress = Math.min(elapsedTime / this.spawnDuration, 1.0);
-      
+
       // Use an easing function for smoother animation
       const easedProgress = this.easeOutBack(progress);
-      currentScale = this.spawnScale + (this.targetScale - this.spawnScale) * easedProgress;
-      
+      currentScale =
+        this.spawnScale + (this.targetScale - this.spawnScale) * easedProgress;
+
       if (this.mesh) {
         this.mesh.scale.set(currentScale, currentScale, currentScale);
       }
-      
+
       if (progress >= 1.0) {
         this.isSpawning = false;
       }
@@ -372,7 +293,7 @@ class Trash {
         this.resetCollision();
       }
     }
-    
+
     // Update glow effect regardless of collision state to handle transitions
     this.updateGlowEffect(deltaTime);
 
@@ -391,7 +312,7 @@ class Trash {
       const center = new THREE.Vector3();
       this.collider.getCenter(center);
       this.colliderMesh.position.copy(center);
-      
+
       // Update the scale of the collider mesh
       this.colliderMesh.scale.set(currentScale, currentScale, currentScale);
     }
@@ -414,7 +335,7 @@ class Trash {
       this.destroy();
       return false; // Signal that this object should be removed
     }
-    
+
     // Check if the object has been marked for deletion
     if (this.isDestroyed) {
       return false; // Signal that this object should be removed
@@ -422,7 +343,7 @@ class Trash {
 
     return true; // Object still active
   }
-  
+
   // Easing function for smoother animation
   easeOutBack(x) {
     const c1 = 1.70158;
@@ -446,18 +367,23 @@ class Trash {
     this.glowIntensity = 0;
     this.updateGlowEffect(0);
   }
-  
+
   // Apply glow effect based on current intensity
   updateGlowEffect(deltaTime) {
     // Update glow intensity if colliding
     if (this.isCollidingWithPlayer) {
       // Create a more dramatic pulsing effect with a sin wave
-      this.glowIntensity = (Math.sin(Date.now() * this.glowPulseSpeed) * 0.5 + 0.8) * this.maxGlowIntensity;
+      this.glowIntensity =
+        (Math.sin(Date.now() * this.glowPulseSpeed) * 0.5 + 0.8) *
+        this.maxGlowIntensity;
     } else {
       // Gradually decrease glow if not colliding
-      this.glowIntensity = Math.max(0, this.glowIntensity - deltaTime * this.glowSpeed);
+      this.glowIntensity = Math.max(
+        0,
+        this.glowIntensity - deltaTime * this.glowSpeed
+      );
     }
-    
+
     // Apply the glow intensity to all materials
     for (const item of this.originalMaterials) {
       if (item.mesh && item.mesh.material) {
@@ -501,10 +427,10 @@ class Trash {
     if (this.isDestroyed) {
       return;
     }
-    
+
     // Mark as destroyed
     this.isDestroyed = true;
-    
+
     // Remove the mesh from the scene and dispose of resources
     if (this.mesh && this.scene) {
       this.scene.remove(this.mesh);
