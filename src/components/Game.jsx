@@ -1,6 +1,6 @@
 import React from 'react';
-import GameContainer from './scenes/GameContainer';
-import GameHUD from './scenes/GameHUD';
+import GameContainer from './views/GameContainer';
+import GameUI from './views/GameUI';
 import { GameProvider } from '../contexts/GameContext';
 import MobileEvent from './MobileEvent';
 
@@ -15,7 +15,7 @@ const Game = () => {
       }}>
         <MobileEvent />
         <GameContainer />
-        <GameHUD />
+        <GameUI />
       </div>
     </GameProvider>
   );

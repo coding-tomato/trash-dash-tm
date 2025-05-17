@@ -13,6 +13,7 @@ class TrashSpawner {
       "nonRecyclable",
     ];
     this.spawnSound = spawnSound;
+    this.trashSpawnPosition = new THREE.Vector3(-2.5, 1, 0);
     this.lastSpawnTime = 0;
     this.activeCollisionIndex = null;
     this.spawnSpeedupTimer = 0;
@@ -94,7 +95,7 @@ class TrashSpawner {
     const randomType =
       this.trashTypes[Math.floor(Math.random() * this.trashTypes.length)];
 
-    const position = new THREE.Vector3(-2.5, 1, 0);
+    const position = this.trashSpawnPosition;
 
     const newTrash = new Trash(this.scene, randomType, position);
     this.trashItems.push(newTrash);
@@ -112,18 +113,6 @@ class TrashSpawner {
 
   getTrashItems() {
     return this.trashItems;
-  }
-
-  checkCombinationsForDisposal(combo) {
-    const disposedTrash = [];
-
-    this.trashItems.forEach((trash, index) => {
-      if (trash.isCollidingWithPlayer && trash.checkCombination(combo)) {
-        disposedTrash.push(index);
-      }
-    });
-
-    return disposedTrash;
   }
 
   destroy() {

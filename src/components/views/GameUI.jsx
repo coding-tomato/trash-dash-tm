@@ -6,7 +6,7 @@ import { CONFIG } from "../../config";
 import Combination from "../Combination";
 import Arrow from "../Arrow";
 
-const GameHUD = () => {
+const GameUI = () => {
   const gameEngine = useGameContext();
   const [gameStats, setGameStats] = useState({
     currentScene: gameEngine?.getGameState()?.currentScene || "MAIN_MENU",
@@ -574,4 +574,4 @@ const GameHUD = () => {
   );
 };
 
-export default GameHUD;
+export default GameUI;

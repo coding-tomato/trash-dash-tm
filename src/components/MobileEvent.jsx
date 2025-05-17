@@ -13,7 +13,10 @@ const MobileEvent = () => {
     if (!gameEngine) return;
 
     const handleKeyDown = (event) => {
-      if (event.code === "Space" || event.code === "Escape") {
+      if (event.code === "Space") {
+        hideMobilePhone();
+      }
+      else if (event.code === "Escape") {
         setShowOverlay(false);
       }
     };
