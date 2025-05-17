@@ -1,5 +1,4 @@
 import * as THREE from "three";
-import { CONFIG } from "../../config";
 
 class Player {
   constructor(scene) {
@@ -42,34 +41,10 @@ class Player {
 
     // Create a plane mesh instead of sprite
     this.mesh = new THREE.Mesh(planeGeometry, this.planeMaterial);
-    // Adjust rotation to fix orientation
-    this.mesh.rotation.y = 0; // Changed from Math.PI to correctly orient the player
-    // Remove the tilt to make sure it's flat facing the camera
+    this.group.rotation.y = Math.PI; // Face forward
     this.mesh.rotation.x = 0; // Changed from -Math.PI/12
     this.mesh.position.set(0, 0, 0);
     this.group.add(this.mesh);
-
-    // Adjust the group rotation to face the camera correctly
-    this.group.rotation.y = Math.PI; // Face forward
-
-    // Massive collider size
-    this.colliderSize = new THREE.Vector3(40, 50, 50); // Store for reuse
-    this.collider = new THREE.Box3();
-
-    const boxGeometry = new THREE.BoxGeometry(
-      this.colliderSize.x,
-      this.colliderSize.y,
-      this.colliderSize.z
-    );
-    const wireframeMaterial = new THREE.MeshBasicMaterial({
-      color: 0x00ff00,
-      wireframe: true,
-      transparent: true,
-      opacity: 0.5,
-    });
-    this.colliderMesh = new THREE.Mesh(boxGeometry, wireframeMaterial);
-    this.colliderMesh.visible = CONFIG.DEBUG;
-    this.group.add(this.colliderMesh);
 
     scene.add(this.group);
   }
@@ -160,24 +135,6 @@ class Player {
         this.group.position.y = this.initialY + jumpOffset;
       }
     }
-
-    // Set collider to always be massive and centered on the player group
-    const center = this.group.position.clone();
-    this.collider.min.copy(
-      center.clone().sub(this.colliderSize.clone().multiplyScalar(0.5))
-    );
-    this.collider.max.copy(
-      center.clone().add(this.colliderSize.clone().multiplyScalar(0.5))
-    );
-    // Also update the wireframe mesh position
-    if (this.colliderMesh) {
-      this.colliderMesh.position.copy(center);
-    }
-  }
-
-  checkCollision(object) {
-    const collision = this.collider.intersectsBox(object.collider);
-    return collision;
   }
 
   destroy(scene) {
@@ -187,11 +144,6 @@ class Player {
         if (this.mesh.material) this.mesh.material.dispose();
         if (this.mesh.material && this.mesh.material.map)
           this.mesh.material.map.dispose();
-      }
-
-      if (this.colliderMesh) {
-        if (this.colliderMesh.geometry) this.colliderMesh.geometry.dispose();
-        if (this.colliderMesh.material) this.colliderMesh.material.dispose();
       }
 
       scene.remove(this.group);

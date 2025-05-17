@@ -89,16 +89,12 @@ const GameUI = () => {
       setCurrentKeyCombo(combo);
     };
 
-    // Event listener for collisions with trash
-    const handleCollision = (data) => {
-      // Add a hint for non-recyclable items
-      const isNonRecyclable = data.type === "nonRecyclable";
+    const handleActiveTrash = (data) => {
 
       setTrashInstructions({
         visible: true,
         type: data.type,
         requiredCombo: data.requiredCombo || [],
-        isNonRecyclable: isNonRecyclable, // Flag to indicate non-recyclable items
         modelName: data.modelName || null, // Store the model name if available
       });
 
@@ -107,7 +103,6 @@ const GameUI = () => {
         () => {
           setTrashInstructions((prev) => ({ ...prev, visible: false }));
         },
-        isNonRecyclable ? 3000 : 2000
       );
     };
 
@@ -122,7 +117,7 @@ const GameUI = () => {
 
     // Add event listeners
     gameEngine.addEventListener("stateChange", handleStateChange);
-    gameEngine.addEventListener("collision", handleCollision);
+    gameEngine.addEventListener("notifyActiveTrash", handleActiveTrash);
     gameEngine.addEventListener("trashDisposed", handleTrashDisposed);
     gameEngine.addEventListener("keyCombo", handleKeyCombo); // Add listener for key combinations
     gameEngine.addEventListener("gamePaused", handleGamePaused);
@@ -142,7 +137,7 @@ const GameUI = () => {
     // Clean up listener on unmount
     return () => {
       gameEngine.removeEventListener("stateChange", handleStateChange);
-      gameEngine.removeEventListener("collision", handleCollision);
+      gameEngine.removeEventListener("notifyActiveTrash", handleActiveTrash);
       gameEngine.removeEventListener("trashDisposed", handleTrashDisposed);
       gameEngine.removeEventListener("keyCombo", handleKeyCombo);
       gameEngine.removeEventListener("gamePaused", handleGamePaused);

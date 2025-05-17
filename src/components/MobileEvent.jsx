@@ -58,8 +58,8 @@ const MobileEvent = () => {
   };
 
   const hideMobilePhone = () => {
-    gameEngine.resume();
     setShowOverlay(false);
+    gameEngine.resume();
   };
 
   return (

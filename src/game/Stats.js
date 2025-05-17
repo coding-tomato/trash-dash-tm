@@ -5,7 +5,6 @@ class Stats {
     this.score = 0;
     this.currentScene = CONFIG.SCENES.MAIN_MENU;
     this.isPlaying = true;
-    this.collisionsCount = 0;
   }
 
   addScore(amount) {
@@ -24,14 +23,9 @@ class Stats {
     this.isPlaying = isPlaying;
   }
 
-  incrementCollisions() {
-    this.collisionsCount++;
-  }
-
   reset() {
     this.score = 0;
     this.isPlaying = true;
-    this.collisionsCount = 0;
     this.currentScene = CONFIG.SCENES.MAIN_MENU;
   }
 
@@ -39,7 +33,6 @@ class Stats {
     return {
       score: this.score,
       isPlaying: this.isPlaying,
-      collisionsCount: this.collisionsCount,
       currentScene: this.currentScene,
     };
   }

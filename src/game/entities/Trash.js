@@ -3,7 +3,7 @@ import assetLoader from "../AssetLoader";
 import { CONFIG } from "../../config";
 
 class Trash {
-  constructor(scene, type, position) {
+  constructor(scene, type, position, onExpire) {
     this.scene = scene;
     this.type = type; // 'glass', 'metal_and_plastic', 'paper', or 'organic'
     this.selectedTrash = null;
@@ -13,17 +13,13 @@ class Trash {
     this.lifespan = 21000;
     this.createdAt = Date.now();
     this.mesh = null;
-    this.collider = null;
-    this.colliderMesh = null; // Add property for collider visualization
-    this.isDestroyed = false; // Flag to indicate whether destroy() has been called
+    this.isDestroyed = false; 
     this.modelName = this.selectRandomModel(type);
-    this.arrowMesh = null; // Arrow mesh for highlighting
+    this.highlightArrowMesh = null;
+    this.onExpire = onExpire;
 
-    // Collision state
-    this.isCollidingWithPlayer = false;
-    this.maxCollisionDistance = 5; // Maximum distance to player to maintain collision
-    this.lastCollisionCheck = Date.now(); // Add a timestamp to track collisions
-    this.collisionTimeout = 15000;
+    // Active trash state
+    this.isActive = false;
 
     // Glow effect properties
     this.glowIntensity = 0;
@@ -42,7 +38,6 @@ class Trash {
     this.targetScale = 0.04; // Target full size
 
     this.createMesh();
-    this.createCollider();
 
     // Apply initial scale for spawn animation
     if (this.mesh) {
@@ -176,17 +171,10 @@ class Trash {
         this.mesh = fbx;
         this.scene.add(fbx);
 
-        // Create the collider here for FBX models
-        const size = new THREE.Vector3(2, 2, 2);
-        this.collider = new THREE.Box3(
-          this.position.clone().sub(size.clone().multiplyScalar(0.5)),
-          this.position.clone().add(size.clone().multiplyScalar(0.5))
-        );
-
         // Add arrow mesh as a child (but hidden by default)
-        this.arrowMesh = this.createArrowMesh();
-        if (this.mesh && this.arrowMesh) {
-          this.mesh.add(this.arrowMesh);
+        this.highlightArrowMesh = this.createArrowMesh();
+        if (this.mesh && this.highlightArrowMesh) {
+          this.mesh.add(this.highlightArrowMesh);
         }
 
         return;
@@ -209,39 +197,9 @@ class Trash {
     return arrowGroup;
   }
 
-  createCollider() {
-    // Initial size (will be scaled during the spawning animation)
-    const size = new THREE.Vector3(2, 2, 2);
-    const center = this.position.clone();
-
-    // Create collider with initial size
-    const initialSize = size.clone().multiplyScalar(this.spawnScale);
-    this.collider = new THREE.Box3(
-      center.clone().sub(initialSize.clone().multiplyScalar(0.5)),
-      center.clone().add(initialSize.clone().multiplyScalar(0.5))
-    );
-
-    // Create a wireframe visualization of the collider
-    const boxGeometry = new THREE.BoxGeometry(size.x, size.y, size.z);
-    const wireframeMaterial = new THREE.MeshBasicMaterial({
-      color: 0xff00ff, // Different color from player collider
-      wireframe: true,
-      transparent: true,
-      opacity: 0.5,
-    });
-    this.colliderMesh = new THREE.Mesh(boxGeometry, wireframeMaterial);
-    this.colliderMesh.position.copy(center);
-    // Apply initial scale
-    this.colliderMesh.scale.set(
-      this.spawnScale,
-      this.spawnScale,
-      this.spawnScale
-    );
-    this.colliderMesh.visible = CONFIG.DEBUG; // Only show in debug mode
-    this.scene.add(this.colliderMesh);
-  }
-
   update(deltaTime) {
+    if (this.isDestroyed) return;
+
     // Handle spawn animation
     let currentScale = this.targetScale;
 
@@ -263,85 +221,39 @@ class Trash {
       }
     }
 
-    // Always move trash according to velocity and speed, regardless of collision state
+    // Move trash according to velocity and speed
     const movement = this.velocity
       .clone()
       .multiplyScalar(this.speed * deltaTime);
     this.mesh.position.add(movement);
 
-    // Make the trash spin slightly all the time
-    if (this.mesh && !this.isCollidingWithPlayer) {
+    if (this.mesh && !this.isActive) {
       this.mesh.rotation.y += 0.001;
     }
 
-    // If colliding, add visual effect but don't stop movement
-    if (this.isCollidingWithPlayer) {
+    if (this.isActive) {
       this.mesh.rotation.y += 0.01;
-
-      // Check if collision has timed out (safety mechanism)
-      if (Date.now() - this.lastCollisionCheck > this.collisionTimeout) {
-        this.resetCollision();
-      }
-
-      // Check if trash has moved too far from player (opportunity window closed)
-      // We'll use the original fixed position as a reference point
-      const playerPosition = new THREE.Vector3(0, 1, -1); // Player's typical position
-      if (
-        this.mesh.position.distanceTo(playerPosition) >
-        this.maxCollisionDistance
-      ) {
-        this.resetCollision();
-      }
     }
 
-    // Update glow effect regardless of collision state to handle transitions
     this.updateGlowEffect(deltaTime);
 
-    // Update collider position and scale
-    const size = new THREE.Vector3(2, 2, 2).multiplyScalar(currentScale);
-    this.collider.min.copy(
-      this.mesh.position.clone().sub(size.clone().multiplyScalar(0.5))
-    );
-    this.collider.max.copy(
-      this.mesh.position.clone().add(size.clone().multiplyScalar(0.5))
-    );
-
-    // Update the wireframe collider visualization position and scale
-    if (this.colliderMesh) {
-      // Calculate center of the collider box
-      const center = new THREE.Vector3();
-      this.collider.getCenter(center);
-      this.colliderMesh.position.copy(center);
-
-      // Update the scale of the collider mesh
-      this.colliderMesh.scale.set(currentScale, currentScale, currentScale);
-    }
-
     // Arrow highlight logic
-    if (this.arrowMesh) {
-      if (this.isCollidingWithPlayer) {
-        this.arrowMesh.visible = true;
+    if (this.highlightArrowMesh) {
+      if (this.isActive) {
+        this.highlightArrowMesh.visible = true;
         // Position arrow above the mesh (account for scale)
-        this.arrowMesh.position.set(0, 20, 0);
+        this.highlightArrowMesh.position.set(0, 20, 0);
         // Optional: animate arrow (e.g., bobbing)
-        this.arrowMesh.position.y += Math.sin(Date.now() * 0.005) * 0.1;
+        this.highlightArrowMesh.position.y += Math.sin(Date.now() * 0.005) * 0.8;
       } else {
-        this.arrowMesh.visible = false;
+        this.highlightArrowMesh.visible = false;
       }
     }
 
     // Check if trash should be destroyed (after lifespan)
     if (Date.now() - this.createdAt >= this.lifespan) {
-      this.destroy();
-      return false; // Signal that this object should be removed
+      this.onExpire && this.onExpire();
     }
-
-    // Check if the object has been marked for deletion
-    if (this.isDestroyed) {
-      return false; // Signal that this object should be removed
-    }
-
-    return true; // Object still active
   }
 
   // Easing function for smoother animation
@@ -351,33 +263,20 @@ class Trash {
     return 1 + c3 * Math.pow(x - 1, 3) + c1 * Math.pow(x - 1, 2);
   }
 
-  startCollision() {
-    if (!this.isCollidingWithPlayer) {
-      this.isCollidingWithPlayer = true;
+  selectTrash() {
+    if (!this.isActive) {
+      this.isActive = true;
       this.position = this.mesh.position.clone();
-      this.lastCollisionCheck = Date.now();
-      // Reset glow intensity for smooth animation start
       this.glowIntensity = 0;
     }
   }
 
-  resetCollision() {
-    this.isCollidingWithPlayer = false;
-    // Remove glow effect immediately
-    this.glowIntensity = 0;
-    this.updateGlowEffect(0);
-  }
-
-  // Apply glow effect based on current intensity
   updateGlowEffect(deltaTime) {
-    // Update glow intensity if colliding
-    if (this.isCollidingWithPlayer) {
-      // Create a more dramatic pulsing effect with a sin wave
+    if (this.isActive) {
       this.glowIntensity =
         (Math.sin(Date.now() * this.glowPulseSpeed) * 0.5 + 0.8) *
         this.maxGlowIntensity;
     } else {
-      // Gradually decrease glow if not colliding
       this.glowIntensity = Math.max(
         0,
         this.glowIntensity - deltaTime * this.glowSpeed
@@ -393,8 +292,8 @@ class Trash {
   }
 
   checkCombination(inputCombo) {
-    // Return false if not currently in collision
-    if (!this.isCollidingWithPlayer) {
+    // Return false if not currently active
+    if (!this.isActive) {
       return false;
     }
 
@@ -418,20 +317,17 @@ class Trash {
     return true;
   }
 
-  getCollisionType() {
+  getTrashType() {
     return this.type;
   }
 
   destroy() {
-    // Prevent double destruction
     if (this.isDestroyed) {
       return;
     }
 
-    // Mark as destroyed
     this.isDestroyed = true;
 
-    // Remove the mesh from the scene and dispose of resources
     if (this.mesh && this.scene) {
       this.scene.remove(this.mesh);
       if (this.mesh.geometry) this.mesh.geometry.dispose();
@@ -445,21 +341,11 @@ class Trash {
       this.mesh = null;
     }
 
-    // Also remove the collider mesh
-    if (this.colliderMesh && this.scene) {
-      this.scene.remove(this.colliderMesh);
-      if (this.colliderMesh.geometry) this.colliderMesh.geometry.dispose();
-      if (this.colliderMesh.material) this.colliderMesh.material.dispose();
-      this.colliderMesh = null;
+    if (this.highlightArrowMesh && this.mesh) {
+      this.mesh.remove(this.highlightArrowMesh);
+      this.highlightArrowMesh = null;
     }
 
-    // Remove arrow mesh if present
-    if (this.arrowMesh && this.mesh) {
-      this.mesh.remove(this.arrowMesh);
-      this.arrowMesh = null;
-    }
-
-    this.collider = null;
     this.originalMaterials = [];
   }
 }

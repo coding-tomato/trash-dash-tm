@@ -15,13 +15,11 @@ class TrashSpawner {
     this.spawnSound = spawnSound;
     this.trashSpawnPosition = new THREE.Vector3(-2.5, 1, 0);
     this.lastSpawnTime = 0;
-    this.activeCollisionIndex = null;
     this.spawnSpeedupTimer = 0;
     this.spawnInterval = 4000; // Start at 4s
     this.spawnIntervalMin = 800; // Minimum interval (1s)
     this.spawnIntervalDecrement = 700; // Decrease by 0.5s each time
     this.spawnSpeedupPeriod = 15000; //
-    this.onSpawn = null; // Callback function for spawn events
   }
 
   update(deltaTime) {
@@ -42,53 +40,7 @@ class TrashSpawner {
       this.lastSpawnTime = currentTime;
     }
 
-    // Store the current length before filtering
-    const oldLength = this.trashItems.length;
-
-    // Keep track of indices to update activeCollisionIndex if needed
-    let removedCount = 0;
-    for (let i = 0; i < oldLength; i++) {
-      const isActive = i === this.activeCollisionIndex;
-      const stillActive = this.trashItems[i].update(deltaTime);
-
-      if (!stillActive) {
-        removedCount++;
-        // If we're removing the active collision item
-        if (isActive) {
-          this.activeCollisionIndex = null;
-        }
-        // If we're removing an item before the active collision, adjust the index
-        else if (
-          this.activeCollisionIndex !== null &&
-          i < this.activeCollisionIndex
-        ) {
-          this.activeCollisionIndex--;
-        }
-      }
-    }
-
-    // Filter out items that return false from update (they've completed their lifecycle)
-    this.trashItems = this.trashItems.filter((trash) => {
-      // Keep items that are still valid and have not exceeded their lifespan
-      // Also check if the trash item has been marked for deletion
-      return (
-        trash &&
-        trash.mesh !== null &&
-        Date.now() - trash.createdAt < trash.lifespan &&
-        !trash.isDestroyed
-      );
-    });
-
-    // Sanity check - if the array length changed unexpectedly
-    if (oldLength - removedCount !== this.trashItems.length) {
-      // If the activeCollisionIndex is out of bounds after filtering, reset it
-      if (
-        this.activeCollisionIndex !== null &&
-        this.activeCollisionIndex >= this.trashItems.length
-      ) {
-        this.activeCollisionIndex = null;
-      }
-    }
+    this.trashItems.forEach((trash) => trash.update(deltaTime));
   }
 
   spawnTrash() {
@@ -97,7 +49,9 @@ class TrashSpawner {
 
     const position = this.trashSpawnPosition;
 
-    const newTrash = new Trash(this.scene, randomType, position);
+    const newTrash = new Trash(this.scene, randomType, position, () =>
+      this.removeActiveTrash()
+    );
     this.trashItems.push(newTrash);
 
     if (this.spawnSound) {
@@ -105,14 +59,23 @@ class TrashSpawner {
         this.spawnSound.stop();
       }
       this.spawnSound.play();
-    }
-    else {
+    } else {
       console.warn("Spawn sound not set or not available.");
     }
   }
 
   getTrashItems() {
     return this.trashItems;
+  }
+
+  getActiveTrash() {
+    return this.trashItems[0];
+  }
+
+  removeActiveTrash() {
+    const activeTrash = this.getActiveTrash();
+    activeTrash.destroy();
+    this.trashItems.splice(0, 1);
   }
 
   destroy() {
@@ -122,7 +85,6 @@ class TrashSpawner {
       }
     });
     this.trashItems = [];
-    this.activeCollisionIndex = null;
   }
 }
 

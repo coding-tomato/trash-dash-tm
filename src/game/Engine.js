@@ -42,7 +42,6 @@ class Game {
     this.controlsEnabled = true;
     this.input = null;
     this.trashSpawner = null;
-    this.collisionsEnabled = true;
     this.keyCombo = [];
   }
 
@@ -254,8 +253,8 @@ class Game {
       }
     });
 
-    if (this.collisionsEnabled && this.player && this.trashSpawner) {
-      this.checkCollisions();
+    if (this.player && this.trashSpawner) {
+      this.checkActiveTrash();
     }
 
     this.renderer.render(this.scene, this.camera);
@@ -454,26 +453,8 @@ class Game {
       this.controls.dispose();
     }
 
-    // Clean up trash spawner
-    if (this.trashSpawner) {
-      this.trashSpawner.destroy();
-    }
-
     // Dispose of Three.js resources
-    this.gameObjects.forEach((obj) => {
-      if (obj.object && obj.object.destroy) {
-        obj.object.destroy(this.scene);
-      } else if (obj.mesh) {
-        if (obj.mesh.geometry) obj.mesh.geometry.dispose();
-        if (obj.mesh.material) {
-          if (Array.isArray(obj.mesh.material)) {
-            obj.mesh.material.forEach((material) => material.dispose());
-          } else {
-            obj.mesh.material.dispose();
-          }
-        }
-      }
-    });
+    this.gameObjects.forEach((obj) => obj.destroy());
 
     // Remove renderer from DOM
     const container = document.getElementById(this.containerId);
@@ -484,29 +465,20 @@ class Game {
     this.isInitialized = false;
   }
 
-  checkCollisions() {
+  checkActiveTrash() {
     const trashItems = this.trashSpawner.getTrashItems();
+
     if (!trashItems.length) return;
 
-    // Always use the first trash as the active one
     const activeTrash = trashItems[0];
-    // Check if player is close enough to the first trash
-    if (this.player.checkCollision(activeTrash)) {
-      if (!activeTrash.isCollidingWithPlayer) {
-        activeTrash.startCollision();
-        this.stats.incrementCollisions();
-        this.emitEvent("collision", {
-          type: activeTrash.getCollisionType(),
-          count: this.stats.collisionsCount,
-          requiredCombo: activeTrash.requiredCombination,
-          isNonRecyclable: activeTrash.getCollisionType() === "nonRecyclable",
-          modelName: activeTrash.modelName,
-        });
-      }
-    } else {
-      if (activeTrash.isCollidingWithPlayer) {
-        activeTrash.resetCollision();
-      }
+
+    if (!activeTrash.isActive) {
+      activeTrash.selectTrash();
+      this.emitEvent("notifyActiveTrash", {
+        type: activeTrash.getTrashType(),
+        requiredCombo: activeTrash.requiredCombination,
+        modelName: activeTrash.modelName,
+      });
     }
   }
 
@@ -516,7 +488,7 @@ class Game {
 
     // Only allow disposal for the first trash item
     if (this.trashSpawner && this.trashSpawner.trashItems.length > 0) {
-      const activeTrash = this.trashSpawner.trashItems[0];
+      const activeTrash = this.trashSpawner.getActiveTrash();
       if (!activeTrash) return;
 
       // Check if this trash can be disposed with the current combo
@@ -535,27 +507,9 @@ class Game {
         this.stats.addScore(10);
         const trashType = activeTrash.type;
 
-        // Reset the collision state first
-        activeTrash.resetCollision();
-
-        // Destroy the trash object
-        activeTrash.destroy();
-
-        // Player jump animation
+        this.trashSpawner.removeActiveTrash();
         this.player.jump();
-
-        // Remove from array
-        this.trashSpawner.trashItems.splice(0, 1);
-
-        // Filter out any destroyed items that may have been missed
-        this.trashSpawner.trashItems = this.trashSpawner.trashItems.filter(
-          (trash) => trash && !trash.isDestroyed
-        );
-
-        // Reset the input queue after successful disposal
-        if (this.input) {
-          this.input.resetCombo();
-        }
+        this.input.resetCombo();
 
         // Notify about successful disposal
         this.emitEvent("trashDisposed", {
