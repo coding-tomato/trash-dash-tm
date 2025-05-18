@@ -252,7 +252,7 @@ class Trash {
 
     // Check if trash should be destroyed (after lifespan)
     if (Date.now() - this.createdAt >= this.lifespan) {
-      this.onExpire && this.onExpire();
+      this.onExpire();
     }
   }
 

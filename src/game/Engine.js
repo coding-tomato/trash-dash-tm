@@ -43,6 +43,7 @@ class Game {
     this.input = null;
     this.trashSpawner = null;
     this.keyCombo = [];
+    this.trashNotified = false;
   }
 
   init() {
@@ -101,7 +102,7 @@ class Game {
     this.preloadAssets().then(() => {
       this.setupGameObjects();
       this.startIntroAnimation().then(() => {
-        this.animate();
+        this.update();
       });
     });
   }
@@ -224,7 +225,10 @@ class Game {
 
     this.scenario = new Scenario(this.scene);
 
-    this.trashSpawner = new TrashSpawner(this.scene, this.sounds.spawn);
+    this.trashSpawner = new TrashSpawner(this.scene, this.sounds.spawn, () => {
+      this.trashNotified = false;
+    });
+
     this.gameObjects.push({
       id: "trashSpawner",
       type: "environment",
@@ -233,10 +237,10 @@ class Game {
     });
   }
 
-  animate() {
+  update() {
     if (!this.stats.isPlaying) return;
 
-    this.animationId = requestAnimationFrame(this.animate.bind(this));
+    this.animationId = requestAnimationFrame(this.update.bind(this));
 
     const now = Date.now();
     const delta = now - (this.lastUpdate || now);
@@ -374,7 +378,7 @@ class Game {
     this.updateReactState();
 
     // Start animation loop
-    this.animate();
+    this.update();
 
     this.startGameTimer(); // Start the 3-minute timer
   }
@@ -472,13 +476,14 @@ class Game {
 
     const activeTrash = trashItems[0];
 
-    if (!activeTrash.isActive) {
+    if (!activeTrash.isActive && !this.trashNotified) {
       activeTrash.selectTrash();
       this.emitEvent("notifyActiveTrash", {
         type: activeTrash.getTrashType(),
         requiredCombo: activeTrash.requiredCombination,
         modelName: activeTrash.modelName,
       });
+      this.trashNotified = true;
     }
   }
 
@@ -527,7 +532,13 @@ class Game {
     // Clear all trash items
     if (this.trashSpawner) {
       this.trashSpawner.destroy();
-      this.trashSpawner = new TrashSpawner(this.scene, this.sounds.spawn);
+      this.trashSpawner = new TrashSpawner(
+        this.scene,
+        this.sounds.spawn,
+        () => {
+          this.trashNotified = false;
+        }
+      );
 
       // Update the trashSpawner reference in gameObjects
       const trashIndex = this.gameObjects.findIndex(

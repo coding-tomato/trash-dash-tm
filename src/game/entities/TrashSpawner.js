@@ -2,7 +2,7 @@ import * as THREE from "three";
 import Trash from "./Trash";
 
 class TrashSpawner {
-  constructor(scene, spawnSound) {
+  constructor(scene, spawnSound, onTrashChange) {
     this.scene = scene;
     this.trashItems = [];
     this.trashTypes = [
@@ -13,6 +13,7 @@ class TrashSpawner {
       "nonRecyclable",
     ];
     this.spawnSound = spawnSound;
+    this.onTrashChange = onTrashChange;
     this.trashSpawnPosition = new THREE.Vector3(-2.5, 1, 0);
     this.lastSpawnTime = 0;
     this.spawnSpeedupTimer = 0;
@@ -49,9 +50,9 @@ class TrashSpawner {
 
     const position = this.trashSpawnPosition;
 
-    const newTrash = new Trash(this.scene, randomType, position, () =>
+    const newTrash = new Trash(this.scene, randomType, position, () => {
       this.removeActiveTrash()
-    );
+    });
     this.trashItems.push(newTrash);
 
     if (this.spawnSound) {
@@ -76,14 +77,11 @@ class TrashSpawner {
     const activeTrash = this.getActiveTrash();
     activeTrash.destroy();
     this.trashItems.splice(0, 1);
+    this.onTrashChange()
   }
 
   destroy() {
-    this.trashItems.forEach((trash) => {
-      if (trash && typeof trash.destroy === "function") {
-        trash.destroy();
-      }
-    });
+    this.trashItems.forEach((trash) => trash.destroy());
     this.trashItems = [];
   }
 }
