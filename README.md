@@ -16,5 +16,6 @@ Main has updated code I cleaned up post jam, there's a branch if you wanna read 
 
 # Requisites and running
 
-Node +18
-`npm install`
+- Node +18
+- `npm install`
+- `npm run dev`
