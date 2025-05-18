@@ -6,6 +6,8 @@ Built for the Hackjam 9 in Voxel School, Madrid.
 
 Main has updated code I cleaned up post jam, there's a branch if you wanna read the vibe coded mess I made while in the jam.
 
+[Try the jam version here!](https://veryeviltomato.itch.io/trash-dash-tm)
+
 # Tech
 
 - UI: React.js
